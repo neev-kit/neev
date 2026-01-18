@@ -13,7 +13,7 @@ func TestBuildContext_Success(t *testing.T) {
 	// Setup directory structure
 	foundationPath := filepath.Join(tmpDir, ".neev", "foundation")
 	blueprintsPath := filepath.Join(tmpDir, ".neev", "blueprints")
-	
+
 	if err := os.MkdirAll(foundationPath, 0755); err != nil {
 		t.Fatalf("Failed to create foundation dir: %v", err)
 	}
@@ -72,7 +72,7 @@ func TestBuildContext_WithFocus(t *testing.T) {
 	// Setup directory structure
 	foundationPath := filepath.Join(tmpDir, ".neev", "foundation")
 	blueprintsPath := filepath.Join(tmpDir, ".neev", "blueprints")
-	
+
 	if err := os.MkdirAll(foundationPath, 0755); err != nil {
 		t.Fatalf("Failed to create foundation dir: %v", err)
 	}
@@ -179,7 +179,7 @@ func TestBuildContext_NonMarkdownFiles(t *testing.T) {
 	// Setup directory structure
 	foundationPath := filepath.Join(tmpDir, ".neev", "foundation")
 	blueprintsPath := filepath.Join(tmpDir, ".neev", "blueprints")
-	
+
 	if err := os.MkdirAll(foundationPath, 0755); err != nil {
 		t.Fatalf("Failed to create foundation dir: %v", err)
 	}
@@ -226,7 +226,7 @@ func TestBuildContext_EmptyDirectories(t *testing.T) {
 	// Setup directory structure with empty dirs
 	foundationPath := filepath.Join(tmpDir, ".neev", "foundation")
 	blueprintsPath := filepath.Join(tmpDir, ".neev", "blueprints")
-	
+
 	if err := os.MkdirAll(foundationPath, 0755); err != nil {
 		t.Fatalf("Failed to create foundation dir: %v", err)
 	}
@@ -261,7 +261,7 @@ func TestBuildContext_FilesInBlueprintRootIgnored(t *testing.T) {
 	// Setup directory structure
 	foundationPath := filepath.Join(tmpDir, ".neev", "foundation")
 	blueprintsPath := filepath.Join(tmpDir, ".neev", "blueprints")
-	
+
 	if err := os.MkdirAll(foundationPath, 0755); err != nil {
 		t.Fatalf("Failed to create foundation dir: %v", err)
 	}
