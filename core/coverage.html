@@ -57,9 +57,31 @@
 				
 				<option value="file0">github.com/neev-kit/neev/core/blueprint/draft.go (83.3%)</option>
 				
-				<option value="file1">github.com/neev-kit/neev/core/bridge/context.go (96.2%)</option>
+				<option value="file1">github.com/neev-kit/neev/core/blueprint/lay.go (76.6%)</option>
 				
-				<option value="file2">github.com/neev-kit/neev/core/foundation/init.go (81.0%)</option>
+				<option value="file2">github.com/neev-kit/neev/core/bridge/context.go (54.3%)</option>
+				
+				<option value="file3">github.com/neev-kit/neev/core/bridge/generator.go (0.0%)</option>
+				
+				<option value="file4">github.com/neev-kit/neev/core/config/loader.go (15.2%)</option>
+				
+				<option value="file5">github.com/neev-kit/neev/core/errors/errors.go (50.0%)</option>
+				
+				<option value="file6">github.com/neev-kit/neev/core/foundation/init.go (81.0%)</option>
+				
+				<option value="file7">github.com/neev-kit/neev/core/foundation/inspect.go (84.6%)</option>
+				
+				<option value="file8">github.com/neev-kit/neev/core/inspect/inspect.go (85.1%)</option>
+				
+				<option value="file9">github.com/neev-kit/neev/core/instructions/claude.go (79.6%)</option>
+				
+				<option value="file10">github.com/neev-kit/neev/core/instructions/copilot.go (84.7%)</option>
+				
+				<option value="file11">github.com/neev-kit/neev/core/logger/logger.go (64.9%)</option>
+				
+				<option value="file12">github.com/neev-kit/neev/core/migration/migrator.go (12.9%)</option>
+				
+				<option value="file13">github.com/neev-kit/neev/core/remotes/sync.go (80.0%)</option>
 				
 				</select>
 			</div>
@@ -111,11 +133,134 @@ func Draft(name string) error <span class="cov8" title="1">{
 }
 </pre>
 		
-		<pre class="file" id="file1" style="display: none">package bridge
+		<pre class="file" id="file1" style="display: none">package blueprint
 
 import (
         "fmt"
-        "io/ioutil"
+        "os"
+        "path/filepath"
+        "time"
+
+        neevErr "github.com/neev-kit/neev/core/errors"
+)
+
+// Lay archives a blueprint by moving it to the foundation archive and updating changelog
+func Lay(blueprintName string) error <span class="cov8" title="1">{
+        // Locate blueprint
+        blueprintPath := filepath.Join(".neev", "blueprints", blueprintName)
+
+        // Check if blueprint exists
+        if _, err := os.Stat(blueprintPath); os.IsNotExist(err) </span><span class="cov8" title="1">{
+                return neevErr.ErrBlueprintNotFound(blueprintName)
+        }</span>
+
+        // Create archive directory if it doesn't exist
+        <span class="cov8" title="1">archivePath := filepath.Join(".neev", "foundation", "archive")
+        if err := os.MkdirAll(archivePath, 0755); err != nil </span><span class="cov0" title="0">{
+                return fmt.Errorf("failed to create archive directory: %w", err)
+        }</span>
+
+        // Create archive subdirectory for this blueprint
+        <span class="cov8" title="1">blueprintArchivePath := filepath.Join(archivePath, blueprintName)
+        if err := os.MkdirAll(blueprintArchivePath, 0755); err != nil </span><span class="cov0" title="0">{
+                return fmt.Errorf("failed to create blueprint archive directory: %w", err)
+        }</span>
+
+        // Move intent.md to archive
+        <span class="cov8" title="1">intentSrc := filepath.Join(blueprintPath, "intent.md")
+        intentDest := filepath.Join(blueprintArchivePath, "intent.md")
+        if err := moveFile(intentSrc, intentDest); err != nil </span><span class="cov0" title="0">{
+                return fmt.Errorf("failed to move intent.md: %w", err)
+        }</span>
+
+        // Move architecture.md to archive
+        <span class="cov8" title="1">archSrc := filepath.Join(blueprintPath, "architecture.md")
+        archDest := filepath.Join(blueprintArchivePath, "architecture.md")
+        if err := moveFile(archSrc, archDest); err != nil </span><span class="cov0" title="0">{
+                return fmt.Errorf("failed to move architecture.md: %w", err)
+        }</span>
+
+        // Update changelog
+        <span class="cov8" title="1">if err := appendToChangelog(blueprintName); err != nil </span><span class="cov0" title="0">{
+                return fmt.Errorf("failed to update changelog: %w", err)
+        }</span>
+
+        // Delete the original blueprint folder
+        <span class="cov8" title="1">if err := os.RemoveAll(blueprintPath); err != nil </span><span class="cov0" title="0">{
+                return fmt.Errorf("failed to delete blueprint folder: %w", err)
+        }</span>
+
+        <span class="cov8" title="1">return nil</span>
+}
+
+// moveFile moves a file from src to dst, handling non-existent source gracefully
+func moveFile(src, dst string) error <span class="cov8" title="1">{
+        // Check if source exists
+        if _, err := os.Stat(src); os.IsNotExist(err) </span><span class="cov8" title="1">{
+                // File doesn't exist, skip it (not all blueprints may have all files)
+                return nil
+        }</span>
+
+        // Read the source file
+        <span class="cov8" title="1">content, err := os.ReadFile(src)
+        if err != nil </span><span class="cov0" title="0">{
+                return fmt.Errorf("failed to read source file: %w", err)
+        }</span>
+
+        // Write to destination
+        <span class="cov8" title="1">if err := os.WriteFile(dst, content, 0644); err != nil </span><span class="cov0" title="0">{
+                return fmt.Errorf("failed to write destination file: %w", err)
+        }</span>
+
+        // Delete source
+        <span class="cov8" title="1">if err := os.Remove(src); err != nil </span><span class="cov0" title="0">{
+                return fmt.Errorf("failed to remove source file: %w", err)
+        }</span>
+
+        <span class="cov8" title="1">return nil</span>
+}
+
+// appendToChangelog adds an entry to the changelog
+func appendToChangelog(blueprintName string) error <span class="cov8" title="1">{
+        changelogPath := filepath.Join(".neev", "changelog.md")
+
+        // Create changelog entry
+        timestamp := time.Now().Format("2006-01-02 15:04:05")
+        entry := fmt.Sprintf("- laid blueprint '%s' on %s\n", blueprintName, timestamp)
+
+        // Read existing content
+        var content []byte
+        if _, err := os.Stat(changelogPath); err == nil </span><span class="cov8" title="1">{
+                // File exists, read it
+                var readErr error
+                content, readErr = os.ReadFile(changelogPath)
+                if readErr != nil </span><span class="cov0" title="0">{
+                        return fmt.Errorf("failed to read changelog: %w", readErr)
+                }</span>
+        }
+
+        // Prepend header if file doesn't exist or is empty
+        <span class="cov8" title="1">if len(content) == 0 </span><span class="cov8" title="1">{
+                content = []byte("# Neev Blueprint Changelog\n\n")
+        }</span>
+
+        // Append new entry
+        <span class="cov8" title="1">content = append([]byte(entry), content...)
+
+        // Write back
+        if err := os.WriteFile(changelogPath, content, 0644); err != nil </span><span class="cov0" title="0">{
+                return fmt.Errorf("failed to write changelog: %w", err)
+        }</span>
+
+        <span class="cov8" title="1">return nil</span>
+}
+</pre>
+		
+		<pre class="file" id="file2" style="display: none">package bridge
+
+import (
+        "fmt"
+        "os"
         "path/filepath"
         "strings"
 )
@@ -133,7 +278,7 @@ func BuildContext(focus string) (string, error) <span class="cov8" title="1">{
 
         // Read blueprint files
         <span class="cov8" title="1">blueprintsPath := ".neev/blueprints"
-        files, err := ioutil.ReadDir(blueprintsPath)
+        files, err := os.ReadDir(blueprintsPath)
         if err != nil </span><span class="cov8" title="1">{
                 return "", fmt.Errorf("failed to read blueprints directory: %w", err)
         }</span>
@@ -150,15 +295,56 @@ func BuildContext(focus string) (string, error) <span class="cov8" title="1">{
         <span class="cov8" title="1">return contextBuilder.String(), nil</span>
 }
 
+// BuildRemoteContext aggregates context from synced remote foundations
+func BuildRemoteContext() (string, error) <span class="cov0" title="0">{
+        remotesPath := ".neev/remotes"
+        
+        // Check if remotes directory exists
+        if _, err := os.Stat(remotesPath); os.IsNotExist(err) </span><span class="cov0" title="0">{
+                return "", nil // No remotes synced
+        }</span>
+
+        <span class="cov0" title="0">var contextBuilder strings.Builder
+        contextBuilder.WriteString("# Remote Foundations\n\n")
+
+        // Read each remote directory
+        remotes, err := os.ReadDir(remotesPath)
+        if err != nil </span><span class="cov0" title="0">{
+                return "", fmt.Errorf("failed to read remotes directory: %w", err)
+        }</span>
+
+        <span class="cov0" title="0">if len(remotes) == 0 </span><span class="cov0" title="0">{
+                return "", nil
+        }</span>
+
+        <span class="cov0" title="0">for _, remote := range remotes </span><span class="cov0" title="0">{
+                if !remote.IsDir() </span><span class="cov0" title="0">{
+                        continue</span>
+                }
+
+                <span class="cov0" title="0">remoteName := remote.Name()
+                contextBuilder.WriteString(fmt.Sprintf("## Remote: %s\n\n", remoteName))
+
+                remoteDir := filepath.Join(remotesPath, remoteName)
+                if err := readFilesInDir(remoteDir, &amp;contextBuilder, ""); err != nil </span><span class="cov0" title="0">{
+                        return "", fmt.Errorf("failed to read remote %s: %w", remoteName, err)
+                }</span>
+
+                <span class="cov0" title="0">contextBuilder.WriteString("\n")</span>
+        }
+
+        <span class="cov0" title="0">return contextBuilder.String(), nil</span>
+}
+
 func readFilesInDir(dir string, builder *strings.Builder, focus string) error <span class="cov8" title="1">{
-        files, err := ioutil.ReadDir(dir)
+        files, err := os.ReadDir(dir)
         if err != nil </span><span class="cov8" title="1">{
                 return fmt.Errorf("failed to read directory %s: %w", dir, err)
         }</span>
 
         <span class="cov8" title="1">for _, file := range files </span><span class="cov8" title="1">{
                 if filepath.Ext(file.Name()) == ".md" </span><span class="cov8" title="1">{
-                        content, err := ioutil.ReadFile(filepath.Join(dir, file.Name()))
+                        content, err := os.ReadFile(filepath.Join(dir, file.Name()))
                         if err != nil </span><span class="cov8" title="1">{
                                 return fmt.Errorf("failed to read file %s: %w", file.Name(), err)
                         }</span>
@@ -172,7 +358,293 @@ func readFilesInDir(dir string, builder *strings.Builder, focus string) error <s
 }
 </pre>
 		
-		<pre class="file" id="file2" style="display: none">package foundation
+		<pre class="file" id="file3" style="display: none">package bridge
+
+import (
+        "fmt"
+        "strings"
+)
+
+// FormatSlashCommand wraps context in a slash-command format for IDE integration.
+// Returns markdown formatted as a generic slash command for easy copy-paste into chat.
+func FormatSlashCommand(context string) string <span class="cov0" title="0">{
+        var builder strings.Builder
+
+        builder.WriteString("```markdown\n")
+        builder.WriteString("/context\n")
+        builder.WriteString("\n")
+        builder.WriteString(context)
+        builder.WriteString("\n")
+        builder.WriteString("```\n")
+
+        return builder.String()
+}</span>
+
+// FormatHandoffPrompt wraps context as a handoff prompt for specialized agent roles.
+// Returns formatted prompt for chat-based agent systems.
+func FormatHandoffPrompt(role string, context string, agentInstructions string) string <span class="cov0" title="0">{
+        var builder strings.Builder
+
+        builder.WriteString(fmt.Sprintf("# Slash Command: /neev-handoff-%s\n\n", strings.ToLower(role)))
+        builder.WriteString(fmt.Sprintf("**Role:** %s\n\n", role))
+        builder.WriteString("## Context\n\n")
+        builder.WriteString(context)
+        builder.WriteString("\n\n")
+
+        if agentInstructions != "" </span><span class="cov0" title="0">{
+                builder.WriteString("## Instructions\n\n")
+                builder.WriteString(agentInstructions)
+                builder.WriteString("\n\n")
+        }</span>
+
+        <span class="cov0" title="0">builder.WriteString("---\n")
+        builder.WriteString("*Generated by Neev for spec-driven development*\n")
+
+        return builder.String()</span>
+}
+
+// FormatHandoffMarkdown wraps the handoff prompt in markdown code fence for copy-paste.
+func FormatHandoffMarkdown(prompt string) string <span class="cov0" title="0">{
+        return fmt.Sprintf("```markdown\n%s\n```\n", prompt)
+}</span>
+</pre>
+		
+		<pre class="file" id="file4" style="display: none">package config
+
+import (
+        "fmt"
+        "os"
+        "path/filepath"
+        "strings"
+
+        "github.com/neev-kit/neev/core/remotes"
+        "gopkg.in/yaml.v3"
+)
+
+// Config represents the neev.yaml configuration structure
+type Config struct {
+        ProjectName    string           `yaml:"project_name"`
+        IgnoreDirs     []string         `yaml:"ignore_dirs"`
+        FoundationPath string           `yaml:"foundation_path"`
+        Remotes        []remotes.Remote `yaml:"remotes,omitempty"`
+}
+
+// DefaultConfig returns a Config with sensible defaults
+func DefaultConfig() *Config <span class="cov8" title="1">{
+        return &amp;Config{
+                ProjectName:    "My App",
+                FoundationPath: ".neev",
+                IgnoreDirs: []string{
+                        "node_modules",
+                        "dist",
+                        "build",
+                        "vendor",
+                        ".git",
+                        ".env",
+                        "bin",
+                        "obj",
+                        ".idea",
+                        ".vscode",
+                        "target",
+                },
+        }
+}</span>
+
+// LoadConfig loads the neev.yaml configuration from the given directory
+func LoadConfig(cwd string) (*Config, error) <span class="cov0" title="0">{
+        configPath := filepath.Join(cwd, "neev.yaml")
+
+        // If config doesn't exist, return defaults
+        if _, err := os.Stat(configPath); os.IsNotExist(err) </span><span class="cov0" title="0">{
+                return DefaultConfig(), nil
+        }</span>
+
+        // Read config file
+        <span class="cov0" title="0">data, err := os.ReadFile(configPath)
+        if err != nil </span><span class="cov0" title="0">{
+                return nil, fmt.Errorf("failed to read neev.yaml: %w", err)
+        }</span>
+
+        // Parse YAML
+        <span class="cov0" title="0">cfg := DefaultConfig() // Start with defaults
+        err = yaml.Unmarshal(data, cfg)
+        if err != nil </span><span class="cov0" title="0">{
+                return nil, fmt.Errorf("failed to parse neev.yaml: %w", err)
+        }</span>
+
+        // Validate
+        <span class="cov0" title="0">if err := cfg.Validate(); err != nil </span><span class="cov0" title="0">{
+                return nil, err
+        }</span>
+
+        <span class="cov0" title="0">return cfg, nil</span>
+}
+
+// SaveConfig writes the configuration to neev.yaml
+func SaveConfig(cwd string, cfg *Config) error <span class="cov0" title="0">{
+        if err := cfg.Validate(); err != nil </span><span class="cov0" title="0">{
+                return err
+        }</span>
+
+        <span class="cov0" title="0">data, err := yaml.Marshal(cfg)
+        if err != nil </span><span class="cov0" title="0">{
+                return fmt.Errorf("failed to marshal config: %w", err)
+        }</span>
+
+        <span class="cov0" title="0">configPath := filepath.Join(cwd, "neev.yaml")
+        err = os.WriteFile(configPath, data, 0644)
+        if err != nil </span><span class="cov0" title="0">{
+                return fmt.Errorf("failed to write neev.yaml: %w", err)
+        }</span>
+
+        <span class="cov0" title="0">return nil</span>
+}
+
+// Validate checks if the configuration is valid
+func (c *Config) Validate() error <span class="cov8" title="1">{
+        if c.ProjectName == "" </span><span class="cov0" title="0">{
+                return fmt.Errorf("project_name cannot be empty")
+        }</span>
+
+        <span class="cov8" title="1">if c.FoundationPath == "" </span><span class="cov0" title="0">{
+                return fmt.Errorf("foundation_path cannot be empty")
+        }</span>
+
+        // Ensure foundation_path is a relative path
+        <span class="cov8" title="1">if filepath.IsAbs(c.FoundationPath) </span><span class="cov0" title="0">{
+                return fmt.Errorf("foundation_path must be a relative path, got: %s", c.FoundationPath)
+        }</span>
+
+        // Validate remotes
+        <span class="cov8" title="1">remoteNames := make(map[string]bool)
+        for _, remote := range c.Remotes </span><span class="cov0" title="0">{
+                if remote.Name == "" </span><span class="cov0" title="0">{
+                        return fmt.Errorf("remote name cannot be empty")
+                }</span>
+                // Validate remote name doesn't contain path separators or traversal sequences
+                <span class="cov0" title="0">if remote.Name != filepath.Base(remote.Name) ||
+                        strings.Contains(remote.Name, "..") ||
+                        strings.ContainsAny(remote.Name, `/\`) </span><span class="cov0" title="0">{
+                        return fmt.Errorf("invalid remote name '%s': must be a simple name without path separators", remote.Name)
+                }</span>
+                <span class="cov0" title="0">if remote.Path == "" </span><span class="cov0" title="0">{
+                        return fmt.Errorf("remote path cannot be empty for remote '%s'", remote.Name)
+                }</span>
+                <span class="cov0" title="0">if remoteNames[remote.Name] </span><span class="cov0" title="0">{
+                        return fmt.Errorf("duplicate remote name: %s", remote.Name)
+                }</span>
+                <span class="cov0" title="0">remoteNames[remote.Name] = true</span>
+        }
+
+        <span class="cov8" title="1">return nil</span>
+}
+
+// GetIgnoreDirs returns the list of directories to ignore, including defaults
+func (c *Config) GetIgnoreDirs() map[string]bool <span class="cov0" title="0">{
+        ignoredMap := make(map[string]bool)
+        for _, dir := range c.IgnoreDirs </span><span class="cov0" title="0">{
+                ignoredMap[dir] = true
+        }</span>
+        <span class="cov0" title="0">return ignoredMap</span>
+}
+</pre>
+		
+		<pre class="file" id="file5" style="display: none">package errors
+
+import (
+        "fmt"
+)
+
+// ErrorType represents the category of error
+type ErrorType string
+
+const (
+        ErrTypeBlueprintNotFound ErrorType = "blueprint_not_found"
+        ErrTypeFoundation        ErrorType = "foundation_missing"
+        ErrTypeInvalidConfig     ErrorType = "invalid_config"
+        ErrTypeIO                ErrorType = "io_error"
+        ErrTypeValidation        ErrorType = "validation_error"
+        ErrTypeUnknown           ErrorType = "unknown"
+)
+
+// NeevError is a custom error type for Neev-specific errors
+type NeevError struct {
+        Type    ErrorType
+        Message string
+        Err     error
+}
+
+// NewNeevError creates a new NeevError with the given type and message
+func NewNeevError(errType ErrorType, message string, err error) *NeevError <span class="cov8" title="1">{
+        return &amp;NeevError{
+                Type:    errType,
+                Message: message,
+                Err:     err,
+        }
+}</span>
+
+// Error implements the error interface
+func (e *NeevError) Error() string <span class="cov8" title="1">{
+        if e.Err != nil </span><span class="cov0" title="0">{
+                return fmt.Sprintf("%s: %v", e.Message, e.Err)
+        }</span>
+        <span class="cov8" title="1">return e.Message</span>
+}
+
+// Unwrap returns the underlying error
+func (e *NeevError) Unwrap() error <span class="cov0" title="0">{
+        return e.Err
+}</span>
+
+// GetSolutionHint provides a user-friendly solution hint based on the error type
+func (e *NeevError) GetSolutionHint() string <span class="cov8" title="1">{
+        switch e.Type </span>{
+        case ErrTypeBlueprintNotFound:<span class="cov8" title="1">
+                return "Make sure the blueprint exists in the .neev/blueprints/ directory. Run `neev draft` to create one."</span>
+        case ErrTypeFoundation:<span class="cov0" title="0">
+                return "Foundation is missing. Try running `neev init` first to set up your project."</span>
+        case ErrTypeInvalidConfig:<span class="cov0" title="0">
+                return "Your neev.yaml configuration is invalid. Check the format and try again."</span>
+        case ErrTypeIO:<span class="cov0" title="0">
+                return "An error occurred while reading or writing files. Check file permissions and disk space."</span>
+        case ErrTypeValidation:<span class="cov0" title="0">
+                return "The provided input is invalid. Check the parameters and try again."</span>
+        case ErrTypeUnknown:<span class="cov0" title="0">
+                fallthrough</span>
+        default:<span class="cov0" title="0">
+                return "An unknown error occurred. Enable debug mode with NEEV_LOG=debug for more details."</span>
+        }
+}
+
+// ErrBlueprintNotFound returns a new ErrTypeBlueprintNotFound error
+func ErrBlueprintNotFound(blueprintName string) *NeevError <span class="cov8" title="1">{
+        return NewNeevError(
+                ErrTypeBlueprintNotFound,
+                fmt.Sprintf("blueprint '%s' not found", blueprintName),
+                nil,
+        )
+}</span>
+
+// ErrFoundationMissing returns a new ErrTypeFoundation error
+func ErrFoundationMissing() *NeevError <span class="cov8" title="1">{
+        return NewNeevError(
+                ErrTypeFoundation,
+                "foundation directory or files not found",
+                nil,
+        )
+}</span>
+
+// ErrInvalidConfig returns a new ErrTypeInvalidConfig error
+func ErrInvalidConfig(reason string) *NeevError <span class="cov8" title="1">{
+        return NewNeevError(
+                ErrTypeInvalidConfig,
+                fmt.Sprintf("invalid configuration: %s", reason),
+                nil,
+        )
+}</span>
+</pre>
+		
+		<pre class="file" id="file6" style="display: none">package foundation
 
 import (
         "fmt"
@@ -235,6 +707,1255 @@ func Initialize(cwd string) error <span class="cov8" title="1">{
         }</span>
 
         <span class="cov8" title="1">return nil</span>
+}
+</pre>
+		
+		<pre class="file" id="file7" style="display: none">package foundation
+
+import (
+        "fmt"
+        "os"
+        "path/filepath"
+        "strings"
+
+        "github.com/neev-kit/neev/core/config"
+        neevErr "github.com/neev-kit/neev/core/errors"
+)
+
+// ignoredDirs contains default directories to skip during walk
+var ignoredDirs = map[string]bool{
+        ".git":         true,
+        ".neev":        true,
+        "node_modules": true,
+        "dist":         true,
+        "vendor":       true,
+        "build":        true,
+        ".env":         true,
+        "bin":          true,
+        "obj":          true,
+        ".idea":        true,
+        ".vscode":      true,
+        "target":       true,
+}
+
+// InspectWithConfig checks for drift using a configuration object
+func InspectWithConfig(cwd string, cfg *config.Config) ([]string, error) <span class="cov8" title="1">{
+        // Convert config ignore dirs to map
+        ignoredDirsMap := make(map[string]bool)
+        for _, dir := range cfg.IgnoreDirs </span><span class="cov8" title="1">{
+                ignoredDirsMap[dir] = true
+        }</span>
+
+        <span class="cov8" title="1">return inspectInternal(cwd, ignoredDirsMap)</span>
+}
+
+// Inspect checks for drift between foundation specs and actual code structure
+func Inspect(cwd string) ([]string, error) <span class="cov8" title="1">{
+        return inspectInternal(cwd, ignoredDirs)
+}</span>
+
+// inspectInternal performs the actual inspection with custom ignored directories
+func inspectInternal(cwd string, ignored map[string]bool) ([]string, error) <span class="cov8" title="1">{
+        var warnings []string
+
+        // Get foundation modules
+        foundationPath := filepath.Join(cwd, RootDir, FoundationDir)
+        foundationModules, err := getFoundationModules(foundationPath)
+        if err != nil </span><span class="cov0" title="0">{
+                return nil, neevErr.NewNeevError(
+                        neevErr.ErrTypeFoundation,
+                        "failed to read foundation modules",
+                        err,
+                )
+        }</span>
+
+        // Get code modules (directories in src/ or root)
+        <span class="cov8" title="1">codeModules, err := getCodeModulesWithIgnored(cwd, ignored)
+        if err != nil </span><span class="cov0" title="0">{
+                return nil, neevErr.NewNeevError(
+                        neevErr.ErrTypeIO,
+                        "failed to scan code modules",
+                        err,
+                )
+        }</span>
+
+        // Check for missing code directories
+        <span class="cov8" title="1">for module := range foundationModules </span><span class="cov8" title="1">{
+                if _, exists := codeModules[module]; !exists </span><span class="cov8" title="1">{
+                        warnings = append(warnings, fmt.Sprintf("⚠️  Foundation spec '%s.md' exists but directory '%s/' not found in code", module, module))
+                }</span>
+        }
+
+        // Check for orphaned code directories (code without specs)
+        <span class="cov8" title="1">for module := range codeModules </span><span class="cov8" title="1">{
+                if _, exists := foundationModules[module]; !exists </span><span class="cov8" title="1">{
+                        warnings = append(warnings, fmt.Sprintf("⚠️  Code directory '%s/' exists but no foundation spec '%s.md' found", module, module))
+                }</span>
+        }
+
+        <span class="cov8" title="1">return warnings, nil</span>
+}
+
+// getFoundationModules returns a set of module names from foundation specs
+func getFoundationModules(foundationPath string) (map[string]bool, error) <span class="cov8" title="1">{
+        modules := make(map[string]bool)
+
+        // Check if foundation directory exists
+        if _, err := os.Stat(foundationPath); os.IsNotExist(err) </span><span class="cov8" title="1">{
+                return modules, nil // No foundation yet, that's okay
+        }</span>
+
+        <span class="cov8" title="1">entries, err := os.ReadDir(foundationPath)
+        if err != nil </span><span class="cov0" title="0">{
+                return nil, err
+        }</span>
+
+        // Skip the archive directory
+        <span class="cov8" title="1">for _, entry := range entries </span><span class="cov8" title="1">{
+                if entry.IsDir() &amp;&amp; entry.Name() == "archive" </span><span class="cov0" title="0">{
+                        continue</span>
+                }
+
+                <span class="cov8" title="1">if !entry.IsDir() &amp;&amp; strings.HasSuffix(entry.Name(), ".md") </span><span class="cov8" title="1">{
+                        // Remove .md extension to get module name
+                        moduleName := strings.TrimSuffix(entry.Name(), ".md")
+                        modules[moduleName] = true
+                }</span>
+        }
+
+        <span class="cov8" title="1">return modules, nil</span>
+}
+
+// getCodeModules returns a set of module directory names from the code structure
+func getCodeModules(cwd string) (map[string]bool, error) <span class="cov0" title="0">{
+        return getCodeModulesWithIgnored(cwd, ignoredDirs)
+}</span>
+
+// getCodeModulesWithIgnored returns a set of module directory names, respecting ignored dirs
+func getCodeModulesWithIgnored(cwd string, ignored map[string]bool) (map[string]bool, error) <span class="cov8" title="1">{
+        modules := make(map[string]bool)
+
+        // Try src/ first, fall back to root
+        srcPath := filepath.Join(cwd, "src")
+        scanPath := srcPath
+        if _, err := os.Stat(srcPath); os.IsNotExist(err) </span><span class="cov8" title="1">{
+                scanPath = cwd
+        }</span>
+
+        <span class="cov8" title="1">entries, err := os.ReadDir(scanPath)
+        if err != nil </span><span class="cov0" title="0">{
+                return nil, err
+        }</span>
+
+        <span class="cov8" title="1">for _, entry := range entries </span><span class="cov8" title="1">{
+                if !entry.IsDir() </span><span class="cov0" title="0">{
+                        continue</span>
+                }
+
+                <span class="cov8" title="1">name := entry.Name()
+
+                // Skip ignored directories
+                if ignored[name] </span><span class="cov8" title="1">{
+                        continue</span>
+                }
+
+                // Skip hidden directories
+                <span class="cov8" title="1">if strings.HasPrefix(name, ".") </span><span class="cov0" title="0">{
+                        continue</span>
+                }
+
+                <span class="cov8" title="1">modules[name] = true</span>
+        }
+
+        <span class="cov8" title="1">return modules, nil</span>
+}
+</pre>
+		
+		<pre class="file" id="file8" style="display: none">package inspect
+
+import (
+        "fmt"
+        "os"
+        "path/filepath"
+        "strings"
+
+        "gopkg.in/yaml.v3"
+)
+
+// InspectOptions configures the inspection behavior
+type InspectOptions struct {
+        RootDir        string
+        FoundationPath string
+        IgnoreDirs     map[string]bool
+        UseDescriptors bool // If true, use .module.yaml files for detailed inspection
+}
+
+// Inspect performs drift detection between foundation specs and code structure
+func Inspect(opts InspectOptions) (*InspectResult, error) <span class="cov8" title="1">{
+        result := &amp;InspectResult{
+                Success:  true,
+                Warnings: []Warning{},
+                Summary:  Summary{},
+        }
+
+        // Get foundation modules
+        foundationModules, descriptors, err := getFoundationModules(opts.FoundationPath, opts.UseDescriptors)
+        if err != nil </span><span class="cov0" title="0">{
+                return nil, fmt.Errorf("failed to read foundation modules: %w", err)
+        }</span>
+
+        // Get code modules
+        <span class="cov8" title="1">codeModules, err := getCodeModules(opts.RootDir, opts.IgnoreDirs)
+        if err != nil </span><span class="cov0" title="0">{
+                return nil, fmt.Errorf("failed to scan code modules: %w", err)
+        }</span>
+
+        <span class="cov8" title="1">result.Summary.TotalModules = len(foundationModules)
+
+        // Check for missing code directories
+        for module := range foundationModules </span><span class="cov8" title="1">{
+                if _, exists := codeModules[module]; !exists </span><span class="cov8" title="1">{
+                        warning := Warning{
+                                Type:        WarningMissingModule,
+                                Module:      module,
+                                Message:     fmt.Sprintf("Foundation spec '%s.md' exists but directory '%s/' not found in code", module, module),
+                                Severity:    "warning",
+                                Remediation: fmt.Sprintf("Create directory '%s/' or remove the foundation spec", module),
+                        }
+                        result.Warnings = append(result.Warnings, warning)
+                        result.Summary.MissingModules++
+                        result.Summary.WarningCount++
+                }</span> else<span class="cov8" title="1"> {
+                        result.Summary.MatchingModules++
+
+                        // If descriptors are enabled, check file-level details
+                        if opts.UseDescriptors </span><span class="cov8" title="1">{
+                                if descriptor, hasDescriptor := descriptors[module]; hasDescriptor </span><span class="cov8" title="1">{
+                                        fileWarnings := checkModuleFiles(opts.RootDir, module, descriptor, codeModules[module])
+                                        result.Warnings = append(result.Warnings, fileWarnings...)
+                                        for _, w := range fileWarnings </span><span class="cov8" title="1">{
+                                                if w.Severity == "error" </span><span class="cov0" title="0">{
+                                                        result.Summary.ErrorCount++
+                                                }</span> else<span class="cov8" title="1"> {
+                                                        result.Summary.WarningCount++
+                                                }</span>
+                                        }
+                                }
+                        }
+                }
+        }
+
+        // Check for orphaned code directories (code without specs)
+        <span class="cov8" title="1">for module := range codeModules </span><span class="cov8" title="1">{
+                if _, exists := foundationModules[module]; !exists </span><span class="cov8" title="1">{
+                        warning := Warning{
+                                Type:        WarningExtraCode,
+                                Module:      module,
+                                Message:     fmt.Sprintf("Code directory '%s/' exists but no foundation spec '%s.md' found", module, module),
+                                Severity:    "info",
+                                Remediation: fmt.Sprintf("Create foundation spec '%s.md' or remove the directory", module),
+                        }
+                        result.Warnings = append(result.Warnings, warning)
+                        result.Summary.ExtraCodeDirs++
+                        result.Summary.WarningCount++
+                }</span>
+        }
+
+        <span class="cov8" title="1">result.Summary.TotalWarnings = len(result.Warnings)
+        result.Success = result.Summary.ErrorCount == 0
+
+        return result, nil</span>
+}
+
+// getFoundationModules returns module names from foundation specs and their descriptors if available
+func getFoundationModules(foundationPath string, useDescriptors bool) (map[string]bool, map[string]ModuleDescriptor, error) <span class="cov8" title="1">{
+        modules := make(map[string]bool)
+        descriptors := make(map[string]ModuleDescriptor)
+
+        // Check if foundation directory exists
+        if _, err := os.Stat(foundationPath); os.IsNotExist(err) </span><span class="cov8" title="1">{
+                return modules, descriptors, nil // No foundation yet, that's okay
+        }</span>
+
+        <span class="cov8" title="1">entries, err := os.ReadDir(foundationPath)
+        if err != nil </span><span class="cov0" title="0">{
+                return nil, nil, err
+        }</span>
+
+        // Skip the archive directory
+        <span class="cov8" title="1">for _, entry := range entries </span><span class="cov8" title="1">{
+                if entry.IsDir() &amp;&amp; entry.Name() == "archive" </span><span class="cov0" title="0">{
+                        continue</span>
+                }
+
+                <span class="cov8" title="1">if !entry.IsDir() &amp;&amp; strings.HasSuffix(entry.Name(), ".md") </span><span class="cov8" title="1">{
+                        // Remove .md extension to get module name
+                        moduleName := strings.TrimSuffix(entry.Name(), ".md")
+                        modules[moduleName] = true
+
+                        // Try to load descriptor if enabled
+                        if useDescriptors </span><span class="cov8" title="1">{
+                                descriptorPath := filepath.Join(foundationPath, moduleName+".module.yaml")
+                                if descriptor, err := loadModuleDescriptor(descriptorPath); err == nil </span><span class="cov8" title="1">{
+                                        descriptors[moduleName] = descriptor
+                                }</span>
+                        }
+                }
+        }
+
+        <span class="cov8" title="1">return modules, descriptors, nil</span>
+}
+
+// loadModuleDescriptor loads a module descriptor from a YAML file
+func loadModuleDescriptor(path string) (ModuleDescriptor, error) <span class="cov8" title="1">{
+        var descriptor ModuleDescriptor
+
+        data, err := os.ReadFile(path)
+        if err != nil </span><span class="cov0" title="0">{
+                return descriptor, err
+        }</span>
+
+        <span class="cov8" title="1">err = yaml.Unmarshal(data, &amp;descriptor)
+        if err != nil </span><span class="cov0" title="0">{
+                return descriptor, fmt.Errorf("failed to parse module descriptor: %w", err)
+        }</span>
+
+        <span class="cov8" title="1">return descriptor, nil</span>
+}
+
+// getCodeModules returns a set of module directory names from the code structure
+func getCodeModules(rootDir string, ignoreDirs map[string]bool) (map[string]string, error) <span class="cov8" title="1">{
+        modules := make(map[string]string)
+
+        // Try src/ first, fall back to root
+        srcPath := filepath.Join(rootDir, "src")
+        scanPath := srcPath
+        if _, err := os.Stat(srcPath); os.IsNotExist(err) </span><span class="cov8" title="1">{
+                scanPath = rootDir
+        }</span>
+
+        <span class="cov8" title="1">entries, err := os.ReadDir(scanPath)
+        if err != nil </span><span class="cov0" title="0">{
+                return nil, err
+        }</span>
+
+        <span class="cov8" title="1">for _, entry := range entries </span><span class="cov8" title="1">{
+                if !entry.IsDir() </span><span class="cov0" title="0">{
+                        continue</span>
+                }
+
+                <span class="cov8" title="1">name := entry.Name()
+
+                // Skip ignored directories
+                if ignoreDirs[name] </span><span class="cov8" title="1">{
+                        continue</span>
+                }
+
+                // Skip hidden directories
+                <span class="cov8" title="1">if strings.HasPrefix(name, ".") </span><span class="cov0" title="0">{
+                        continue</span>
+                }
+
+                <span class="cov8" title="1">modules[name] = filepath.Join(scanPath, name)</span>
+        }
+
+        <span class="cov8" title="1">return modules, nil</span>
+}
+
+// checkModuleFiles verifies that expected files from the descriptor exist
+func checkModuleFiles(rootDir, moduleName string, descriptor ModuleDescriptor, modulePath string) []Warning <span class="cov8" title="1">{
+        var warnings []Warning
+
+        // Check expected files
+        for _, expectedFile := range descriptor.ExpectedFiles </span><span class="cov8" title="1">{
+                filePath := filepath.Join(modulePath, expectedFile)
+                if _, err := os.Stat(filePath); os.IsNotExist(err) </span><span class="cov8" title="1">{
+                        warning := Warning{
+                                Type:        WarningMissingFile,
+                                Module:      moduleName,
+                                Message:     fmt.Sprintf("Expected file '%s' not found in module '%s'", expectedFile, moduleName),
+                                Severity:    "warning",
+                                Remediation: fmt.Sprintf("Create file '%s' or update module descriptor", filePath),
+                        }
+                        warnings = append(warnings, warning)
+                }</span>
+        }
+
+        // Check expected directories
+        <span class="cov8" title="1">for _, expectedDir := range descriptor.ExpectedDirs </span><span class="cov8" title="1">{
+                dirPath := filepath.Join(modulePath, expectedDir)
+                if stat, err := os.Stat(dirPath); os.IsNotExist(err) || !stat.IsDir() </span><span class="cov0" title="0">{
+                        warning := Warning{
+                                Type:        WarningMissingFile,
+                                Module:      moduleName,
+                                Message:     fmt.Sprintf("Expected directory '%s' not found in module '%s'", expectedDir, moduleName),
+                                Severity:    "warning",
+                                Remediation: fmt.Sprintf("Create directory '%s' or update module descriptor", dirPath),
+                        }
+                        warnings = append(warnings, warning)
+                }</span>
+        }
+
+        // Check patterns (glob matching)
+        <span class="cov8" title="1">for _, pattern := range descriptor.Patterns </span><span class="cov8" title="1">{
+                fullPattern := filepath.Join(modulePath, pattern)
+                matches, err := filepath.Glob(fullPattern)
+                if err != nil || len(matches) == 0 </span><span class="cov0" title="0">{
+                        warning := Warning{
+                                Type:        WarningMissingFile,
+                                Module:      moduleName,
+                                Message:     fmt.Sprintf("No files matching pattern '%s' in module '%s'", pattern, moduleName),
+                                Severity:    "info",
+                                Remediation: fmt.Sprintf("Add files matching pattern '%s' or update module descriptor", pattern),
+                        }
+                        warnings = append(warnings, warning)
+                }</span>
+        }
+
+        <span class="cov8" title="1">return warnings</span>
+}
+</pre>
+		
+		<pre class="file" id="file9" style="display: none">package instructions
+
+import (
+        "strings"
+)
+
+// FormatForClaude formats context text with Claude-optimized structure
+func FormatForClaude(context string) string <span class="cov8" title="1">{
+        var builder strings.Builder
+
+        builder.WriteString("# CONTEXT FOR CLAUDE\n\n")
+        builder.WriteString("This document contains the complete project context in a format optimized for Claude.\n\n")
+        builder.WriteString("---\n\n")
+
+        // Add explicit section headers that Claude understands well
+        builder.WriteString("## 📋 RULES AND CONSTRAINTS\n\n")
+        builder.WriteString("- Follow all specifications exactly as defined\n")
+        builder.WriteString("- Maintain consistency with existing code patterns\n")
+        builder.WriteString("- Ask for clarification if requirements conflict\n")
+        builder.WriteString("- Preserve existing functionality unless explicitly changing it\n\n")
+        builder.WriteString("---\n\n")
+
+        // Process the context to add clear section markers
+        // Split on lines starting with "# " to find markdown headers
+        lines := strings.Split(context, "\n")
+        inSection := false
+        sawHeader := false
+        var preHeaderLines []string
+        
+        for _, line := range lines </span><span class="cov8" title="1">{
+                trimmed := strings.TrimSpace(line)
+                // Check if this is a markdown header (starts with # at beginning of line)
+                if strings.HasPrefix(trimmed, "# ") </span><span class="cov8" title="1">{
+                        // If this is the first header and we have pre-header content,
+                        // emit it as a general context section before the first header.
+                        if !sawHeader &amp;&amp; len(preHeaderLines) &gt; 0 </span><span class="cov0" title="0">{
+                                builder.WriteString("## 📚 GENERAL CONTEXT\n")
+                                for _, preLine := range preHeaderLines </span><span class="cov0" title="0">{
+                                        builder.WriteString(preLine)
+                                        builder.WriteString("\n")
+                                }</span>
+                                <span class="cov0" title="0">builder.WriteString("\n")
+                                preHeaderLines = nil</span>
+                        } else<span class="cov8" title="1"> if inSection </span><span class="cov8" title="1">{
+                                builder.WriteString("\n")
+                        }</span>
+                        // Add clear section separator with emoji
+                        <span class="cov8" title="1">builder.WriteString("## 📚 ")
+                        builder.WriteString(strings.TrimPrefix(trimmed, "# "))
+                        builder.WriteString("\n")
+                        inSection = true
+                        sawHeader = true</span>
+                } else<span class="cov8" title="1"> {
+                        if !sawHeader </span><span class="cov0" title="0">{
+                                // Buffer lines before the first header so they are not lost
+                                preHeaderLines = append(preHeaderLines, line)
+                        }</span> else<span class="cov8" title="1"> if inSection </span><span class="cov8" title="1">{
+                                builder.WriteString(line)
+                                builder.WriteString("\n")
+                        }</span>
+                }
+        }
+        
+        // If no headers were found at all, emit any collected lines as general context.
+        <span class="cov8" title="1">if !sawHeader &amp;&amp; len(preHeaderLines) &gt; 0 </span><span class="cov0" title="0">{
+                builder.WriteString("## 📚 GENERAL CONTEXT\n")
+                for _, preLine := range preHeaderLines </span><span class="cov0" title="0">{
+                        builder.WriteString(preLine)
+                        builder.WriteString("\n")
+                }</span>
+        }
+
+        <span class="cov8" title="1">builder.WriteString("\n---\n\n")
+        builder.WriteString("## 🎯 CURRENT TASK\n\n")
+        builder.WriteString("Review the specifications above and implement features according to:\n")
+        builder.WriteString("1. The ARCHITECTURE defined in foundation specs\n")
+        builder.WriteString("2. The INTENT described in active blueprints\n")
+        builder.WriteString("3. The RULES AND CONSTRAINTS at the top of this document\n\n")
+
+        return builder.String()</span>
+}
+
+// ClaudeContext wraps the standard context with Claude-optimized formatting
+func ClaudeContext(standardContext string, includeRemotes bool, remoteContext string) string <span class="cov8" title="1">{
+        var fullContext strings.Builder
+
+        fullContext.WriteString(standardContext)
+        
+        if includeRemotes &amp;&amp; remoteContext != "" </span><span class="cov8" title="1">{
+                fullContext.WriteString("\n\n")
+                fullContext.WriteString(remoteContext)
+        }</span>
+
+        <span class="cov8" title="1">return FormatForClaude(fullContext.String())</span>
+}
+</pre>
+		
+		<pre class="file" id="file10" style="display: none">package instructions
+
+import (
+        "fmt"
+        "os"
+        "path/filepath"
+        "strings"
+)
+
+// CopilotInstructions generates GitHub Copilot instructions based on foundation and active blueprints
+func CopilotInstructions(rootDir string) (string, error) <span class="cov8" title="1">{
+        var builder strings.Builder
+
+        builder.WriteString("# GitHub Copilot Instructions\n\n")
+        builder.WriteString("This project uses Neev for spec-driven development.\n\n")
+
+        // Read foundation summary
+        foundationPath := filepath.Join(rootDir, ".neev", "foundation")
+        if _, err := os.Stat(foundationPath); err == nil </span><span class="cov8" title="1">{
+                builder.WriteString("## Project Foundation\n\n")
+                
+                entries, err := os.ReadDir(foundationPath)
+                if err != nil </span><span class="cov0" title="0">{
+                        return "", fmt.Errorf("failed to read foundation: %w", err)
+                }</span>
+
+                // List foundation modules
+                <span class="cov8" title="1">builder.WriteString("Foundation modules:\n")
+                for _, entry := range entries </span><span class="cov8" title="1">{
+                        if !entry.IsDir() &amp;&amp; strings.HasSuffix(entry.Name(), ".md") </span><span class="cov8" title="1">{
+                                moduleName := strings.TrimSuffix(entry.Name(), ".md")
+                                builder.WriteString(fmt.Sprintf("- %s\n", moduleName))
+                        }</span>
+                }
+                <span class="cov8" title="1">builder.WriteString("\n")</span>
+        }
+
+        // Read active blueprints
+        <span class="cov8" title="1">blueprintsPath := filepath.Join(rootDir, ".neev", "blueprints")
+        if _, err := os.Stat(blueprintsPath); err == nil </span><span class="cov8" title="1">{
+                entries, err := os.ReadDir(blueprintsPath)
+                if err != nil </span><span class="cov0" title="0">{
+                        return "", fmt.Errorf("failed to read blueprints: %w", err)
+                }</span>
+
+                <span class="cov8" title="1">if len(entries) &gt; 0 </span><span class="cov8" title="1">{
+                        builder.WriteString("## Active Blueprints\n\n")
+                        
+                        for _, entry := range entries </span><span class="cov8" title="1">{
+                                if !entry.IsDir() </span><span class="cov0" title="0">{
+                                        continue</span>
+                                }
+
+                                <span class="cov8" title="1">blueprintName := entry.Name()
+                                blueprintPath := filepath.Join(blueprintsPath, blueprintName)
+
+                                // Read intent if available
+                                intentPath := filepath.Join(blueprintPath, "intent.md")
+                                if intentData, err := os.ReadFile(intentPath); err == nil </span><span class="cov8" title="1">{
+                                        builder.WriteString(fmt.Sprintf("### Blueprint: %s\n\n", blueprintName))
+                                        
+                                        // Extract first paragraph or first 200 chars as summary
+                                        content := string(intentData)
+                                        lines := strings.Split(content, "\n")
+                                        summary := ""
+                                        for _, line := range lines </span><span class="cov8" title="1">{
+                                                trimmed := strings.TrimSpace(line)
+                                                if trimmed != "" &amp;&amp; !strings.HasPrefix(trimmed, "#") </span><span class="cov8" title="1">{
+                                                        summary = trimmed
+                                                        break</span>
+                                                }
+                                        }
+                                        <span class="cov8" title="1">if summary == "" &amp;&amp; len(content) &gt; 0 </span><span class="cov0" title="0">{
+                                                summary = content
+                                                if len(summary) &gt; 200 </span><span class="cov0" title="0">{
+                                                        summary = summary[:200] + "..."
+                                                }</span>
+                                        }
+                                        
+                                        <span class="cov8" title="1">builder.WriteString(fmt.Sprintf("**Intent**: %s\n\n", summary))</span>
+                                }
+                        }
+                }
+        }
+
+        // Add general guidelines
+        <span class="cov8" title="1">builder.WriteString("## Development Guidelines\n\n")
+        builder.WriteString("- Follow the architecture defined in foundation specifications\n")
+        builder.WriteString("- Implement features according to blueprint intent and architecture\n")
+        builder.WriteString("- Use `neev bridge` to get full context for complex tasks\n")
+        builder.WriteString("- Run `neev inspect` to check for drift between specs and code\n")
+
+        return builder.String(), nil</span>
+}
+
+// SaveCopilotInstructions saves Copilot instructions to .github/copilot-instructions.md
+func SaveCopilotInstructions(rootDir string) error <span class="cov8" title="1">{
+        instructions, err := CopilotInstructions(rootDir)
+        if err != nil </span><span class="cov0" title="0">{
+                return err
+        }</span>
+
+        <span class="cov8" title="1">githubDir := filepath.Join(rootDir, ".github")
+        if err := os.MkdirAll(githubDir, 0755); err != nil </span><span class="cov0" title="0">{
+                return fmt.Errorf("failed to create .github directory: %w", err)
+        }</span>
+
+        <span class="cov8" title="1">instructionsPath := filepath.Join(githubDir, "copilot-instructions.md")
+        if err := os.WriteFile(instructionsPath, []byte(instructions), 0644); err != nil </span><span class="cov0" title="0">{
+                return fmt.Errorf("failed to write instructions file: %w", err)
+        }</span>
+
+        <span class="cov8" title="1">return nil</span>
+}
+</pre>
+		
+		<pre class="file" id="file11" style="display: none">package logger
+
+import (
+        "context"
+        "fmt"
+        "io"
+        "log/slog"
+        "os"
+)
+
+var globalLogger *slog.Logger
+
+// Init initializes the global logger based on environment variables
+func Init() <span class="cov8" title="1">{
+        logFormat := os.Getenv("NEEV_LOG")
+        globalLogger = createLogger(logFormat)
+}</span>
+
+// createLogger creates a logger based on the format
+func createLogger(format string) *slog.Logger <span class="cov8" title="1">{
+        var handler slog.Handler
+
+        // Use JSON format if NEEV_LOG=json, otherwise use human-readable format
+        if format == "json" </span><span class="cov0" title="0">{
+                handler = slog.NewJSONHandler(os.Stdout, &amp;slog.HandlerOptions{
+                        Level: slog.LevelInfo,
+                })
+        }</span> else<span class="cov8" title="1"> {
+                // Human-readable format with colors and emojis
+                handler = NewColoredHandler(os.Stdout, &amp;slog.HandlerOptions{
+                        Level: slog.LevelInfo,
+                })
+        }</span>
+
+        <span class="cov8" title="1">return slog.New(handler)</span>
+}
+
+// ColoredHandler is a custom slog handler that outputs human-readable logs
+type ColoredHandler struct {
+        handler slog.Handler
+}
+
+// NewColoredHandler creates a new ColoredHandler
+func NewColoredHandler(w io.Writer, opts *slog.HandlerOptions) slog.Handler <span class="cov8" title="1">{
+        if opts == nil </span><span class="cov0" title="0">{
+                opts = &amp;slog.HandlerOptions{}
+        }</span>
+        <span class="cov8" title="1">return &amp;ColoredHandler{
+                handler: slog.NewTextHandler(w, opts),
+        }</span>
+}
+
+// Handle processes log records with color and emoji enhancements
+func (h *ColoredHandler) Handle(ctx context.Context, r slog.Record) error <span class="cov8" title="1">{
+        // Add emoji based on level
+        emoji := ""
+        switch r.Level </span>{
+        case slog.LevelDebug:<span class="cov0" title="0">
+                emoji = "🔍 "</span>
+        case slog.LevelInfo:<span class="cov8" title="1">
+                emoji = "ℹ️  "</span>
+        case slog.LevelWarn:<span class="cov8" title="1">
+                emoji = "⚠️  "</span>
+        case slog.LevelError:<span class="cov8" title="1">
+                emoji = "❌ "</span>
+        }
+
+        // Prepend emoji to the message
+        <span class="cov8" title="1">r.Message = emoji + r.Message
+
+        return h.handler.Handle(ctx, r)</span>
+}
+
+// Enabled reports whether the handler handles records at the given level
+func (h *ColoredHandler) Enabled(ctx context.Context, level slog.Level) bool <span class="cov8" title="1">{
+        return h.handler.Enabled(ctx, level)
+}</span>
+
+// WithAttrs returns a handler with attributes
+func (h *ColoredHandler) WithAttrs(attrs []slog.Attr) slog.Handler <span class="cov0" title="0">{
+        return &amp;ColoredHandler{
+                handler: h.handler.WithAttrs(attrs),
+        }
+}</span>
+
+// WithGroup returns a handler with a group
+func (h *ColoredHandler) WithGroup(name string) slog.Handler <span class="cov0" title="0">{
+        return &amp;ColoredHandler{
+                handler: h.handler.WithGroup(name),
+        }
+}</span>
+
+// Info logs an info level message
+func Info(msg string, args ...any) <span class="cov8" title="1">{
+        if globalLogger == nil </span><span class="cov0" title="0">{
+                Init()
+        }</span>
+        <span class="cov8" title="1">globalLogger.Info(msg, args...)</span>
+}
+
+// Debug logs a debug level message
+func Debug(msg string, args ...any) <span class="cov8" title="1">{
+        if globalLogger == nil </span><span class="cov0" title="0">{
+                Init()
+        }</span>
+        <span class="cov8" title="1">globalLogger.Debug(msg, args...)</span>
+}
+
+// Warn logs a warning level message
+func Warn(msg string, args ...any) <span class="cov8" title="1">{
+        if globalLogger == nil </span><span class="cov0" title="0">{
+                Init()
+        }</span>
+        <span class="cov8" title="1">globalLogger.Warn(msg, args...)</span>
+}
+
+// Error logs an error level message
+func Error(msg string, args ...any) <span class="cov8" title="1">{
+        if globalLogger == nil </span><span class="cov0" title="0">{
+                Init()
+        }</span>
+        <span class="cov8" title="1">globalLogger.Error(msg, args...)</span>
+}
+
+// Printf is a convenience function for formatted output
+func Printf(format string, args ...any) <span class="cov0" title="0">{
+        fmt.Printf(format, args...)
+}</span>
+
+// GetLogger returns the global logger instance
+func GetLogger() *slog.Logger <span class="cov0" title="0">{
+        if globalLogger == nil </span><span class="cov0" title="0">{
+                Init()
+        }</span>
+        <span class="cov0" title="0">return globalLogger</span>
+}
+</pre>
+		
+		<pre class="file" id="file12" style="display: none">package migration
+
+import (
+        "fmt"
+        "os"
+        "path/filepath"
+        "strings"
+        "time"
+)
+
+// Migrate detects the source type (if auto) and executes the migration.
+func Migrate(cfg MigrationConfig) (*MigrationResult, error) <span class="cov8" title="1">{
+        result := &amp;MigrationResult{
+                Success:    false,
+                SourceType: cfg.SourceType,
+        }
+
+        // Auto-detect source type if needed
+        if cfg.SourceType == SourceTypeAuto </span><span class="cov8" title="1">{
+                detected, err := detectSourceType(cfg.RootDir)
+                if err != nil </span><span class="cov8" title="1">{
+                        result.Errors = append(result.Errors, fmt.Sprintf("Auto-detection failed: %v", err))
+                        return result, err
+                }</span>
+                <span class="cov0" title="0">result.SourceType = detected
+                result.Messages = append(result.Messages, fmt.Sprintf("Auto-detected source type: %s", detected))</span>
+        }
+
+        // Create backup if requested and not in dry-run mode
+        <span class="cov0" title="0">if cfg.BackupOld &amp;&amp; !cfg.DryRun </span><span class="cov0" title="0">{
+                backupDir, err := createBackup(cfg.RootDir)
+                if err != nil </span><span class="cov0" title="0">{
+                        result.Errors = append(result.Errors, fmt.Sprintf("Backup failed: %v", err))
+                        return result, err
+                }</span>
+                <span class="cov0" title="0">result.BackupDir = backupDir
+                result.Messages = append(result.Messages, fmt.Sprintf("Backup created at: %s", backupDir))</span>
+        }
+
+        // Execute migration based on source type
+        <span class="cov0" title="0">var err error
+        switch result.SourceType </span>{
+        case SourceTypeOpenSpec:<span class="cov0" title="0">
+                err = migrateOpenSpec(cfg, result)</span>
+        case SourceTypeSpecKit:<span class="cov0" title="0">
+                err = migrateSpecKit(cfg, result)</span>
+        default:<span class="cov0" title="0">
+                return result, fmt.Errorf("unsupported source type: %s", result.SourceType)</span>
+        }
+
+        <span class="cov0" title="0">if err != nil </span><span class="cov0" title="0">{
+                result.Errors = append(result.Errors, fmt.Sprintf("Migration failed: %v", err))
+                return result, err
+        }</span>
+
+        <span class="cov0" title="0">result.Success = true
+        return result, nil</span>
+}
+
+// detectSourceType attempts to auto-detect the project type.
+func detectSourceType(rootDir string) (SourceType, error) <span class="cov8" title="1">{
+        // Check for openspec structure (specs/ and changes/ dirs)
+        specsPath := filepath.Join(rootDir, "specs")
+        changesPath := filepath.Join(rootDir, "changes")
+
+        specsExists := false
+        changesExists := false
+
+        if _, err := os.Stat(specsPath); err == nil </span><span class="cov0" title="0">{
+                specsExists = true
+        }</span>
+        <span class="cov8" title="1">if _, err := os.Stat(changesPath); err == nil </span><span class="cov0" title="0">{
+                changesExists = true
+        }</span>
+
+        <span class="cov8" title="1">if specsExists || changesExists </span><span class="cov0" title="0">{
+                return SourceTypeOpenSpec, nil
+        }</span>
+
+        // Check for speckit structure (.specify/spec.md)
+        <span class="cov8" title="1">specifyPath := filepath.Join(rootDir, ".specify", "spec.md")
+        if _, err := os.Stat(specifyPath); err == nil </span><span class="cov0" title="0">{
+                return SourceTypeSpecKit, nil
+        }</span>
+
+        <span class="cov8" title="1">return "", fmt.Errorf("could not auto-detect project type - neither openspec nor speckit structure found")</span>
+}
+
+// migrateOpenSpec handles migration from openspec projects.
+// Moves specs/*.md -&gt; .neev/foundation/, changes/* -&gt; .neev/blueprints/
+func migrateOpenSpec(cfg MigrationConfig, result *MigrationResult) error <span class="cov0" title="0">{
+        neevDir := filepath.Join(cfg.RootDir, ".neev")
+        foundationDir := filepath.Join(neevDir, "foundation")
+        blueprintsDir := filepath.Join(neevDir, "blueprints")
+
+        // Create .neev structure if it doesn't exist
+        for _, dir := range []string{neevDir, foundationDir, blueprintsDir} </span><span class="cov0" title="0">{
+                if !cfg.DryRun </span><span class="cov0" title="0">{
+                        if err := os.MkdirAll(dir, 0755); err != nil </span><span class="cov0" title="0">{
+                                return fmt.Errorf("failed to create directory %s: %w", dir, err)
+                        }</span>
+                        <span class="cov0" title="0">result.DirsCreatedCount++</span>
+                }
+        }
+
+        // Migrate specs/ -&gt; .neev/foundation/
+        <span class="cov0" title="0">specsPath := filepath.Join(cfg.RootDir, "specs")
+        if _, err := os.Stat(specsPath); err == nil </span><span class="cov0" title="0">{
+                entries, err := os.ReadDir(specsPath)
+                if err != nil </span><span class="cov0" title="0">{
+                        return fmt.Errorf("failed to read specs directory: %w", err)
+                }</span>
+
+                <span class="cov0" title="0">for _, entry := range entries </span><span class="cov0" title="0">{
+                        if !entry.IsDir() &amp;&amp; strings.HasSuffix(entry.Name(), ".md") </span><span class="cov0" title="0">{
+                                src := filepath.Join(specsPath, entry.Name())
+                                dst := filepath.Join(foundationDir, entry.Name())
+
+                                if !cfg.DryRun </span><span class="cov0" title="0">{
+                                        data, err := os.ReadFile(src)
+                                        if err != nil </span><span class="cov0" title="0">{
+                                                result.Errors = append(result.Errors, fmt.Sprintf("Failed to read %s: %v", src, err))
+                                                continue</span>
+                                        }
+
+                                        <span class="cov0" title="0">if err := os.WriteFile(dst, data, 0644); err != nil </span><span class="cov0" title="0">{
+                                                result.Errors = append(result.Errors, fmt.Sprintf("Failed to write %s: %v", dst, err))
+                                                continue</span>
+                                        }
+                                }
+
+                                <span class="cov0" title="0">result.FilesMovedCount++
+                                result.Messages = append(result.Messages, fmt.Sprintf("Migrated: %s -&gt; %s", src, dst))</span>
+                        }
+                }
+        }
+
+        // Migrate changes/ -&gt; .neev/blueprints/
+        <span class="cov0" title="0">changesPath := filepath.Join(cfg.RootDir, "changes")
+        if _, err := os.Stat(changesPath); err == nil </span><span class="cov0" title="0">{
+                entries, err := os.ReadDir(changesPath)
+                if err != nil </span><span class="cov0" title="0">{
+                        return fmt.Errorf("failed to read changes directory: %w", err)
+                }</span>
+
+                <span class="cov0" title="0">for _, entry := range entries </span><span class="cov0" title="0">{
+                        if entry.IsDir() </span><span class="cov0" title="0">{
+                                blueprintName := entry.Name()
+                                srcDir := filepath.Join(changesPath, blueprintName)
+                                dstDir := filepath.Join(blueprintsDir, blueprintName)
+
+                                if !cfg.DryRun </span><span class="cov0" title="0">{
+                                        if err := copyDirectory(srcDir, dstDir); err != nil </span><span class="cov0" title="0">{
+                                                result.Errors = append(result.Errors, fmt.Sprintf("Failed to copy blueprint %s: %v", blueprintName, err))
+                                                continue</span>
+                                        }
+                                }
+
+                                <span class="cov0" title="0">result.FilesMovedCount++
+                                result.Messages = append(result.Messages, fmt.Sprintf("Migrated: %s -&gt; %s", srcDir, dstDir))</span>
+                        }
+                }
+        }
+
+        <span class="cov0" title="0">return nil</span>
+}
+
+// migrateSpecKit handles migration from speckit projects.
+// Moves .specify/spec.md -&gt; .neev/foundation/core.md
+func migrateSpecKit(cfg MigrationConfig, result *MigrationResult) error <span class="cov0" title="0">{
+        neevDir := filepath.Join(cfg.RootDir, ".neev")
+        foundationDir := filepath.Join(neevDir, "foundation")
+
+        // Create .neev/foundation if it doesn't exist
+        for _, dir := range []string{neevDir, foundationDir} </span><span class="cov0" title="0">{
+                if !cfg.DryRun </span><span class="cov0" title="0">{
+                        if err := os.MkdirAll(dir, 0755); err != nil </span><span class="cov0" title="0">{
+                                return fmt.Errorf("failed to create directory %s: %w", dir, err)
+                        }</span>
+                        <span class="cov0" title="0">result.DirsCreatedCount++</span>
+                }
+        }
+
+        // Migrate .specify/spec.md -&gt; .neev/foundation/core.md
+        <span class="cov0" title="0">srcPath := filepath.Join(cfg.RootDir, ".specify", "spec.md")
+        if _, err := os.Stat(srcPath); err != nil </span><span class="cov0" title="0">{
+                return fmt.Errorf("speckit spec.md not found at %s: %w", srcPath, err)
+        }</span>
+
+        <span class="cov0" title="0">dstPath := filepath.Join(foundationDir, "core.md")
+
+        if !cfg.DryRun </span><span class="cov0" title="0">{
+                data, err := os.ReadFile(srcPath)
+                if err != nil </span><span class="cov0" title="0">{
+                        return fmt.Errorf("failed to read spec.md: %w", err)
+                }</span>
+
+                <span class="cov0" title="0">if err := os.WriteFile(dstPath, data, 0644); err != nil </span><span class="cov0" title="0">{
+                        return fmt.Errorf("failed to write core.md: %w", err)
+                }</span>
+        }
+
+        <span class="cov0" title="0">result.FilesMovedCount++
+        result.Messages = append(result.Messages, fmt.Sprintf("Migrated: %s -&gt; %s", srcPath, dstPath))
+
+        return nil</span>
+}
+
+// createBackup creates a timestamped backup of the .neev directory if it exists.
+func createBackup(rootDir string) (string, error) <span class="cov0" title="0">{
+        neevDir := filepath.Join(rootDir, ".neev")
+
+        // Check if .neev already exists
+        if _, err := os.Stat(neevDir); os.IsNotExist(err) </span><span class="cov0" title="0">{
+                return "", nil // No backup needed
+        }</span>
+
+        <span class="cov0" title="0">timestamp := time.Now().Format("20060102_150405")
+        backupDir := filepath.Join(rootDir, fmt.Sprintf(".neev.backup_%s", timestamp))
+
+        if err := copyDirectory(neevDir, backupDir); err != nil </span><span class="cov0" title="0">{
+                return "", fmt.Errorf("failed to create backup: %w", err)
+        }</span>
+
+        <span class="cov0" title="0">return backupDir, nil</span>
+}
+
+// copyDirectory recursively copies a directory.
+func copyDirectory(src, dst string) error <span class="cov0" title="0">{
+        return filepath.Walk(src, func(path string, info os.FileInfo, err error) error </span><span class="cov0" title="0">{
+                if err != nil </span><span class="cov0" title="0">{
+                        return err
+                }</span>
+
+                // Calculate the relative path
+                <span class="cov0" title="0">relPath, err := filepath.Rel(src, path)
+                if err != nil </span><span class="cov0" title="0">{
+                        return err
+                }</span>
+
+                <span class="cov0" title="0">dstPath := filepath.Join(dst, relPath)
+
+                if info.IsDir() </span><span class="cov0" title="0">{
+                        return os.MkdirAll(dstPath, 0755)
+                }</span>
+
+                // Copy file
+                <span class="cov0" title="0">data, err := os.ReadFile(path)
+                if err != nil </span><span class="cov0" title="0">{
+                        return err
+                }</span>
+
+                <span class="cov0" title="0">return os.WriteFile(dstPath, data, 0644)</span>
+        })
+}
+</pre>
+		
+		<pre class="file" id="file13" style="display: none">package remotes
+
+import (
+        "fmt"
+        "io"
+        "os"
+        "path/filepath"
+        "strings"
+        "time"
+)
+
+// Sync synchronizes remote foundations to the local .neev/remotes directory
+func Sync(rootDir string, remotes []Remote) (*SyncResult, error) <span class="cov8" title="1">{
+        result := &amp;SyncResult{
+                Success:       true,
+                SyncedRemotes: []string{},
+                Errors:        make(map[string]string),
+                FilesCopied:   0,
+        }
+
+        remotesDir := filepath.Join(rootDir, ".neev", "remotes")
+
+        // Ensure remotes directory exists
+        if err := os.MkdirAll(remotesDir, 0755); err != nil </span><span class="cov0" title="0">{
+                return nil, fmt.Errorf("failed to create remotes directory: %w", err)
+        }</span>
+
+        <span class="cov8" title="1">for _, remote := range remotes </span><span class="cov8" title="1">{
+                if err := syncRemote(rootDir, remotesDir, remote, result); err != nil </span><span class="cov8" title="1">{
+                        result.Success = false
+                        result.Errors[remote.Name] = err.Error()
+                }</span> else<span class="cov8" title="1"> {
+                        result.SyncedRemotes = append(result.SyncedRemotes, remote.Name)
+                }</span>
+        }
+
+        <span class="cov8" title="1">return result, nil</span>
+}
+
+// syncRemote syncs a single remote foundation
+func syncRemote(rootDir, remotesDir string, remote Remote, result *SyncResult) error <span class="cov8" title="1">{
+        // Resolve the remote path (handle relative paths)
+        remotePath := remote.Path
+        if !filepath.IsAbs(remotePath) </span><span class="cov0" title="0">{
+                remotePath = filepath.Join(rootDir, remotePath)
+        }</span>
+
+        // Check if remote path exists
+        <span class="cov8" title="1">if _, err := os.Stat(remotePath); os.IsNotExist(err) </span><span class="cov8" title="1">{
+                return fmt.Errorf("remote path does not exist: %s", remotePath)
+        }</span>
+
+        // Create destination directory for this remote
+        <span class="cov8" title="1">destDir := filepath.Join(remotesDir, remote.Name)
+        if err := os.RemoveAll(destDir); err != nil </span><span class="cov0" title="0">{
+                return fmt.Errorf("failed to clean destination directory: %w", err)
+        }</span>
+        <span class="cov8" title="1">if err := os.MkdirAll(destDir, 0755); err != nil </span><span class="cov0" title="0">{
+                return fmt.Errorf("failed to create destination directory: %w", err)
+        }</span>
+
+        // Copy files from remote to destination
+        <span class="cov8" title="1">filesCopied := 0
+        err := filepath.Walk(remotePath, func(path string, info os.FileInfo, err error) error </span><span class="cov8" title="1">{
+                if err != nil </span><span class="cov0" title="0">{
+                        return err
+                }</span>
+
+                // Skip directories
+                <span class="cov8" title="1">if info.IsDir() </span><span class="cov8" title="1">{
+                        // Skip archive subdirectory
+                        if info.Name() == "archive" </span><span class="cov8" title="1">{
+                                return filepath.SkipDir
+                        }</span>
+                        <span class="cov8" title="1">return nil</span>
+                }
+
+                // Only copy markdown files for now
+                <span class="cov8" title="1">if !strings.HasSuffix(info.Name(), ".md") </span><span class="cov0" title="0">{
+                        return nil
+                }</span>
+
+                // If public_only is set, skip files that start with underscore
+                <span class="cov8" title="1">if remote.PublicOnly &amp;&amp; strings.HasPrefix(info.Name(), "_") </span><span class="cov8" title="1">{
+                        return nil
+                }</span>
+
+                // Calculate relative path
+                <span class="cov8" title="1">relPath, err := filepath.Rel(remotePath, path)
+                if err != nil </span><span class="cov0" title="0">{
+                        return err
+                }</span>
+
+                // Copy file
+                <span class="cov8" title="1">destPath := filepath.Join(destDir, relPath)
+                
+                // Validate destPath is within destDir to prevent path traversal
+                cleanDest := filepath.Clean(destPath)
+                cleanDestDir := filepath.Clean(destDir)
+                if !strings.HasPrefix(cleanDest, cleanDestDir+string(os.PathSeparator)) &amp;&amp; cleanDest != cleanDestDir </span><span class="cov0" title="0">{
+                        return fmt.Errorf("invalid destination path: %s", destPath)
+                }</span>
+                
+                <span class="cov8" title="1">if err := copyFile(path, destPath); err != nil </span><span class="cov0" title="0">{
+                        return fmt.Errorf("failed to copy %s: %w", path, err)
+                }</span>
+
+                <span class="cov8" title="1">filesCopied++
+                return nil</span>
+        })
+
+        <span class="cov8" title="1">if err != nil </span><span class="cov0" title="0">{
+                return fmt.Errorf("failed to sync remote %s: %w", remote.Name, err)
+        }</span>
+
+        <span class="cov8" title="1">result.FilesCopied += filesCopied
+        return nil</span>
+}
+
+// copyFile copies a file from src to dst
+func copyFile(src, dst string) error <span class="cov8" title="1">{
+        // Ensure destination directory exists
+        destDir := filepath.Dir(dst)
+        if err := os.MkdirAll(destDir, 0755); err != nil </span><span class="cov0" title="0">{
+                return err
+        }</span>
+
+        // Open source file
+        <span class="cov8" title="1">sourceFile, err := os.Open(src)
+        if err != nil </span><span class="cov0" title="0">{
+                return err
+        }</span>
+        <span class="cov8" title="1">defer sourceFile.Close()
+
+        // Create destination file
+        destFile, err := os.Create(dst)
+        if err != nil </span><span class="cov0" title="0">{
+                return err
+        }</span>
+        <span class="cov8" title="1">defer destFile.Close()
+
+        // Copy contents
+        _, err = io.Copy(destFile, sourceFile)
+        if err != nil </span><span class="cov0" title="0">{
+                return err
+        }</span>
+
+        // Sync to disk
+        <span class="cov8" title="1">return destFile.Sync()</span>
+}
+
+// GetRemoteInfo returns information about a synced remote
+func GetRemoteInfo(rootDir, remoteName string) (*RemoteInfo, error) <span class="cov8" title="1">{
+        // Validate remoteName to prevent path traversal
+        if remoteName == "" </span><span class="cov0" title="0">{
+                return nil, fmt.Errorf("remote name cannot be empty")
+        }</span>
+        // Ensure remoteName is a simple name without path separators or traversal sequences
+        <span class="cov8" title="1">if remoteName != filepath.Base(remoteName) ||
+                strings.Contains(remoteName, "..") ||
+                strings.ContainsAny(remoteName, `/\`) </span><span class="cov0" title="0">{
+                return nil, fmt.Errorf("invalid remote name '%s'", remoteName)
+        }</span>
+        
+        <span class="cov8" title="1">remoteDir := filepath.Join(rootDir, ".neev", "remotes", remoteName)
+
+        if _, err := os.Stat(remoteDir); os.IsNotExist(err) </span><span class="cov8" title="1">{
+                return nil, fmt.Errorf("remote '%s' not found (not synced?)", remoteName)
+        }</span>
+
+        <span class="cov8" title="1">info := &amp;RemoteInfo{
+                Name:  remoteName,
+                Path:  remoteDir,
+                Files: []string{},
+        }
+
+        // Count files and gather names
+        var lastModTime time.Time
+        err := filepath.Walk(remoteDir, func(path string, fileInfo os.FileInfo, err error) error </span><span class="cov8" title="1">{
+                if err != nil </span><span class="cov0" title="0">{
+                        return err
+                }</span>
+
+                <span class="cov8" title="1">if !fileInfo.IsDir() </span><span class="cov8" title="1">{
+                        relPath, relErr := filepath.Rel(remoteDir, path)
+                        if relErr != nil </span><span class="cov0" title="0">{
+                                return relErr
+                        }</span>
+                        <span class="cov8" title="1">info.Files = append(info.Files, relPath)
+                        info.FileCount++
+
+                        // Update last modified if this file is newer
+                        if lastModTime.IsZero() || fileInfo.ModTime().After(lastModTime) </span><span class="cov8" title="1">{
+                                lastModTime = fileInfo.ModTime()
+                        }</span>
+                }
+
+                <span class="cov8" title="1">return nil</span>
+        })
+
+        <span class="cov8" title="1">if err != nil </span><span class="cov0" title="0">{
+                return nil, fmt.Errorf("failed to scan remote directory: %w", err)
+        }</span>
+
+        <span class="cov8" title="1">if !lastModTime.IsZero() </span><span class="cov8" title="1">{
+                info.LastModified = lastModTime.Format("2006-01-02 15:04:05")
+        }</span>
+
+        <span class="cov8" title="1">return info, nil</span>
+}
+
+// ListRemotes lists all synced remotes
+func ListRemotes(rootDir string) ([]string, error) <span class="cov8" title="1">{
+        remotesDir := filepath.Join(rootDir, ".neev", "remotes")
+
+        if _, err := os.Stat(remotesDir); os.IsNotExist(err) </span><span class="cov8" title="1">{
+                return []string{}, nil // No remotes directory yet
+        }</span>
+
+        <span class="cov8" title="1">entries, err := os.ReadDir(remotesDir)
+        if err != nil </span><span class="cov0" title="0">{
+                return nil, fmt.Errorf("failed to read remotes directory: %w", err)
+        }</span>
+
+        <span class="cov8" title="1">remotes := []string{}
+        for _, entry := range entries </span><span class="cov8" title="1">{
+                if entry.IsDir() </span><span class="cov8" title="1">{
+                        remotes = append(remotes, entry.Name())
+                }</span>
+        }
+
+        <span class="cov8" title="1">return remotes, nil</span>
 }
 </pre>
 		
