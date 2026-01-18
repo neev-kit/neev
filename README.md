@@ -23,18 +23,46 @@ Traditional AI coding assistants work best with clear project context. Neev solv
 
 ### 1. Installation
 
+**Option A: Download Pre-built Binary (Recommended)**
+
+Download the latest stable release from [GitHub Releases](https://github.com/neev-kit/neev/releases):
+
+```bash
+# macOS (Intel)
+curl -L https://github.com/neev-kit/neev/releases/latest/download/neev_darwin_amd64.tar.gz | tar xz
+sudo mv neev /usr/local/bin/
+
+# macOS (Apple Silicon)
+curl -L https://github.com/neev-kit/neev/releases/latest/download/neev_darwin_arm64.tar.gz | tar xz
+sudo mv neev /usr/local/bin/
+
+# Linux
+curl -L https://github.com/neev-kit/neev/releases/latest/download/neev_linux_amd64.tar.gz | tar xz
+sudo mv neev /usr/local/bin/
+
+# Windows (PowerShell)
+# Download from https://github.com/neev-kit/neev/releases and extract
+```
+
+**Option B: Build from Source**
+
 ```bash
 # Clone and build
 git clone https://github.com/neev-kit/neev.git
 cd neev
 go mod download
 go build -o neev ./cli
+sudo mv neev /usr/local/bin/
 
-# Or install from source
+# Or install directly
 go install github.com/neev-kit/neev/cli@latest
+```
 
-# Verify
+**Verify Installation**
+
+```bash
 neev --version
+neev --help
 ```
 
 ### 2. Initialize Your Project

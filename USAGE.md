@@ -13,7 +13,27 @@ A comprehensive guide to using Neev CLI for project blueprint management and AI 
 
 ## Installation
 
-### From Source
+### Option 1: Download Pre-built Binary (Recommended)
+
+Download the latest stable release from [GitHub Releases](https://github.com/neev-kit/neev/releases):
+
+```bash
+# macOS (Intel)
+curl -L https://github.com/neev-kit/neev/releases/latest/download/neev_darwin_amd64.tar.gz | tar xz
+sudo mv neev /usr/local/bin/
+
+# macOS (Apple Silicon/M1/M2)
+curl -L https://github.com/neev-kit/neev/releases/latest/download/neev_darwin_arm64.tar.gz | tar xz
+sudo mv neev /usr/local/bin/
+
+# Linux (x86_64)
+curl -L https://github.com/neev-kit/neev/releases/latest/download/neev_linux_amd64.tar.gz | tar xz
+sudo mv neev /usr/local/bin/
+
+# Windows: Visit https://github.com/neev-kit/neev/releases and download the .zip file
+```
+
+### Option 2: Build from Source
 
 ```bash
 git clone https://github.com/neev-kit/neev
@@ -22,13 +42,15 @@ go mod download
 go build -o neev ./cli
 ```
 
-### Using Go Install
+### Option 3: Using Go Install
 
 ```bash
 go install github.com/neev-kit/neev/cli@latest
 ```
 
-### Quick Test
+The binary will be installed to `$GOPATH/bin/neev`. Ensure `$GOPATH/bin` is in your `$PATH`.
+
+### Verify Installation
 
 ```bash
 neev --version

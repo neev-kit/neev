@@ -2,6 +2,10 @@
 
 Complete guide for setting up your development environment and building/testing Neev locally.
 
+> **For Users**: If you just want to use Neev, see [README.md](README.md#installation) for installation instructions or [USAGE.md](USAGE.md#installation) for download options.
+
+> **For Contributors**: This guide is for developers who want to contribute to Neev's codebase.
+
 ## Table of Contents
 
 - [System Requirements](#system-requirements)
