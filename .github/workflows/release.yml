@@ -3,8 +3,9 @@ name: Release
 on:
   push:
     tags:
-      # Only release on production tags (v1.0.0, v2.1.0, etc)
-      # Excludes pre-releases and dev versions (-alpha, -beta, -dev, -rc, etc)
+      # Production releases: v1.0.0, v2.1.0, etc
+      # Auto-created by auto-release.yml when merging to main
+      # Pattern: major.minor.patch (no pre-release suffixes)
       - 'v[0-9]+.[0-9]+.[0-9]+$'
 
 permissions:
