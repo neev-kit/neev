@@ -50,8 +50,9 @@ Example neev.yaml configuration:
 			infoStyle := lipgloss.NewStyle().
 				Foreground(lipgloss.Color("6"))
 			fmt.Println(infoStyle.Render("ℹ️  No remotes configured in neev.yaml"))
-			fmt.Println("\nTo add remotes, edit neev.yaml and add:")
-			fmt.Println(`
+			fmt.Println()
+			fmt.Println("To add remotes, edit neev.yaml and add:")
+			fmt.Print(`
 remotes:
   - name: api
     path: "../my-api-repo/.neev/foundation"
