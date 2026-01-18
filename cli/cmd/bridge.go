@@ -4,6 +4,7 @@ import (
 	"fmt"
 
 	"github.com/neev-kit/neev/core/bridge"
+	"github.com/neev-kit/neev/core/instructions"
 	"github.com/spf13/cobra"
 )
 
@@ -14,6 +15,7 @@ var bridgeCmd = &cobra.Command{
 	Run: func(cmd *cobra.Command, args []string) {
 		focus, _ := cmd.Flags().GetString("focus")
 		withRemotes, _ := cmd.Flags().GetBool("with-remotes")
+		claudeMode, _ := cmd.Flags().GetBool("claude")
 		
 		context, err := bridge.BuildContext(focus)
 		if err != nil {
@@ -21,14 +23,20 @@ var bridgeCmd = &cobra.Command{
 			return
 		}
 
+		remoteContext := ""
 		// If with-remotes flag is set, append remote contexts
 		if withRemotes {
-			remoteContext, err := bridge.BuildRemoteContext()
+			remoteContext, err = bridge.BuildRemoteContext()
 			if err != nil {
 				fmt.Printf("Warning: Failed to include remotes: %v\n", err)
-			} else if remoteContext != "" {
-				context += "\n\n" + remoteContext
 			}
+		}
+
+		// Format for Claude if requested
+		if claudeMode {
+			context = instructions.ClaudeContext(context, withRemotes, remoteContext)
+		} else if withRemotes && remoteContext != "" {
+			context += "\n\n" + remoteContext
 		}
 
 		fmt.Println(context)
@@ -38,5 +46,6 @@ var bridgeCmd = &cobra.Command{
 func init() {
 	bridgeCmd.Flags().StringP("focus", "f", "", "Focus on a specific context string")
 	bridgeCmd.Flags().Bool("with-remotes", false, "Include synced remote foundations in context")
+	bridgeCmd.Flags().Bool("claude", false, "Format output optimized for Claude AI")
 	rootCmd.AddCommand(bridgeCmd)
 }
