@@ -45,7 +45,6 @@ archives:
     files:
       - README.md
       - LICENSE
-      - CHANGELOG.md
 
 # Homebrew formula generation
 # Uncomment and configure when ready to publish to a Homebrew tap
