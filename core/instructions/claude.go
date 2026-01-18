@@ -21,19 +21,24 @@ func FormatForClaude(context string) string {
 	builder.WriteString("---\n\n")
 
 	// Process the context to add clear section markers
-	sections := strings.Split(context, "# ")
-	for i, section := range sections {
-		if i == 0 && strings.TrimSpace(section) == "" {
-			continue
-		}
-
-		if i > 0 {
-			// Add clear section separators
+	// Split on lines starting with "# " to find markdown headers
+	lines := strings.Split(context, "\n")
+	inSection := false
+	for _, line := range lines {
+		trimmed := strings.TrimSpace(line)
+		// Check if this is a markdown header (starts with # at beginning of line)
+		if strings.HasPrefix(trimmed, "# ") {
+			if inSection {
+				builder.WriteString("\n")
+			}
+			// Add clear section separator with emoji
 			builder.WriteString("## 📚 ")
-			builder.WriteString(section)
+			builder.WriteString(strings.TrimPrefix(trimmed, "# "))
 			builder.WriteString("\n")
-		} else {
-			builder.WriteString(section)
+			inSection = true
+		} else if inSection {
+			builder.WriteString(line)
+			builder.WriteString("\n")
 		}
 	}
 

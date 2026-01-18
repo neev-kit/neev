@@ -111,7 +111,13 @@ func TestSaveCopilotInstructions(t *testing.T) {
 }
 
 func TestFormatForClaude(t *testing.T) {
-	input := "# Project Foundation\n\nSome content here\n\n# Blueprints\n\nBlueprint content"
+	input := `# Project Foundation
+
+Some content here
+
+# Blueprints
+
+Blueprint content`
 
 	formatted := FormatForClaude(input)
 
