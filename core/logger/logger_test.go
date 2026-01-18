@@ -267,4 +267,3 @@ func TestEmojiLevels(t *testing.T) {
 		}
 	}
 }
-

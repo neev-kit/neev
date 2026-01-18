@@ -360,4 +360,3 @@ func TestCopyDirectory(t *testing.T) {
 		t.Errorf("Copied file has incorrect content")
 	}
 }
-

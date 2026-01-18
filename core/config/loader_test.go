@@ -339,4 +339,3 @@ func TestLoadConfigReadError(t *testing.T) {
 		t.Error("LoadConfig should error when neev.yaml is a directory")
 	}
 }
-

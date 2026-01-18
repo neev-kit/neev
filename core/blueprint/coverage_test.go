@@ -65,4 +65,3 @@ func TestMoveFileEdgeCases(t *testing.T) {
 	os.WriteFile(srcFile, []byte("content"), 0644)
 	_ = moveFile(srcFile, dstFile)
 }
-
