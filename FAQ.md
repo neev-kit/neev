@@ -649,9 +649,11 @@ neev bridge
 ```bash
 # Use module descriptors for accurate detection
 # Create .neev/blueprints/feature/.module.yaml
-echo "expected_files:
+cat > .neev/blueprints/feature/.module.yaml << 'EOF'
+expected_files:
   - src/feature.js
-  - tests/feature.test.js" > .neev/blueprints/feature/.module.yaml
+  - tests/feature.test.js
+EOF
 
 neev inspect --use-descriptors
 
