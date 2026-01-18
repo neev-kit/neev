@@ -596,6 +596,10 @@ See [MAINTAINERS.md](MAINTAINERS.md) for core team and advisors.
 
 ## 📚 Documentation
 
+**👉 [Complete Documentation Index](DOCUMENTATION.md)** — Find exactly what you need
+
+### Quick Links
+
 - **🚀 [Getting Started](GETTING_STARTED.md)** — Complete beginner's guide
 - **📖 [Usage Guide](USAGE.md)** — Detailed command reference
 - **📋 [API Reference](API_REFERENCE.md)** — Complete command documentation
@@ -605,4 +609,4 @@ See [MAINTAINERS.md](MAINTAINERS.md) for core team and advisors.
 - **🏗️ [Architecture](ARCHITECTURE.md)** — System design
 - **💻 [Development](DEVELOPMENT.md)** — Contributing guide
 
-👉 **New to Neev?** Start with [Getting Started](GETTING_STARTED.md)
+**New to Neev?** Start with [Getting Started](GETTING_STARTED.md) → Try a [Tutorial](TUTORIALS.md) → Master [Best Practices](BEST_PRACTICES.md)
