@@ -3,6 +3,7 @@ package bridge
 import (
 	"fmt"
 	"io/ioutil"
+	"os"
 	"path/filepath"
 	"strings"
 )
@@ -32,6 +33,47 @@ func BuildContext(focus string) (string, error) {
 				return "", err
 			}
 		}
+	}
+
+	return contextBuilder.String(), nil
+}
+
+// BuildRemoteContext aggregates context from synced remote foundations
+func BuildRemoteContext() (string, error) {
+	remotesPath := ".neev/remotes"
+	
+	// Check if remotes directory exists
+	if _, err := os.Stat(remotesPath); os.IsNotExist(err) {
+		return "", nil // No remotes synced
+	}
+
+	var contextBuilder strings.Builder
+	contextBuilder.WriteString("# Remote Foundations\n\n")
+
+	// Read each remote directory
+	remotes, err := ioutil.ReadDir(remotesPath)
+	if err != nil {
+		return "", fmt.Errorf("failed to read remotes directory: %w", err)
+	}
+
+	if len(remotes) == 0 {
+		return "", nil
+	}
+
+	for _, remote := range remotes {
+		if !remote.IsDir() {
+			continue
+		}
+
+		remoteName := remote.Name()
+		contextBuilder.WriteString(fmt.Sprintf("## Remote: %s\n\n", remoteName))
+
+		remoteDir := filepath.Join(remotesPath, remoteName)
+		if err := readFilesInDir(remoteDir, &contextBuilder, ""); err != nil {
+			return "", fmt.Errorf("failed to read remote %s: %w", remoteName, err)
+		}
+
+		contextBuilder.WriteString("\n")
 	}
 
 	return contextBuilder.String(), nil
