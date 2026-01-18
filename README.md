@@ -207,8 +207,72 @@ neev bridge -f db > context.md # Save to file
 Analyze project structure and find missing blueprints.
 
 ```bash
-neev inspect
+neev inspect                    # Human-readable output
+neev inspect --json             # Machine-readable JSON for CI/CD
+neev inspect --use-descriptors  # File-level validation with .module.yaml
 ```
+
+### `neev sync-remotes`
+
+Synchronize remote foundation sources from other repositories.
+
+```bash
+neev sync-remotes               # Sync all remotes from neev.yaml
+neev sync-remotes --json        # JSON output
+```
+
+### `neev instructions`
+
+Generate GitHub Copilot instructions from your foundation and blueprints.
+
+```bash
+neev instructions               # Creates .github/copilot-instructions.md
+```
+
+## Production Features
+
+Neev includes production-grade features for enterprise use:
+
+### 🔍 Advanced Drift Detection
+- **Structured Warnings**: Categorized drift detection (MISSING_MODULE, EXTRA_CODE, etc.)
+- **Module Descriptors**: Define expected files and patterns in `.module.yaml` files
+- **CI/CD Integration**: JSON output for automated checks
+
+```bash
+neev inspect --json             # Get structured drift report
+neev inspect --use-descriptors  # Validate against module descriptors
+```
+
+### 🌐 Polyrepo Support
+- **Remote Foundations**: Reference foundations from other repositories
+- **Cross-Repo Context**: Include external specs in bridge context
+- **Public/Private Control**: Filter what gets shared with `public_only`
+
+```yaml
+# neev.yaml
+remotes:
+  - name: api
+    path: "../backend/.neev/foundation"
+    public_only: true
+```
+
+```bash
+neev sync-remotes               # Sync all remotes
+neev bridge --with-remotes      # Include remotes in context
+```
+
+### 🤖 AI Assistant Integration
+- **GitHub Copilot**: Auto-generate instructions from your specs
+- **Claude Optimization**: Special formatting for Claude AI
+- **Context Management**: Smart aggregation for better AI suggestions
+
+```bash
+neev instructions               # Generate Copilot instructions
+neev bridge --claude            # Claude-optimized output
+neev bridge --claude --with-remotes  # Full context for Claude
+```
+
+See [PRODUCTION_ENHANCEMENTS.md](PRODUCTION_ENHANCEMENTS.md) for detailed documentation.
 
 ## Configuration
 

@@ -4,15 +4,18 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+	"strings"
 
+	"github.com/neev-kit/neev/core/remotes"
 	"gopkg.in/yaml.v3"
 )
 
 // Config represents the neev.yaml configuration structure
 type Config struct {
-	ProjectName    string   `yaml:"project_name"`
-	IgnoreDirs     []string `yaml:"ignore_dirs"`
-	FoundationPath string   `yaml:"foundation_path"`
+	ProjectName    string           `yaml:"project_name"`
+	IgnoreDirs     []string         `yaml:"ignore_dirs"`
+	FoundationPath string           `yaml:"foundation_path"`
+	Remotes        []remotes.Remote `yaml:"remotes,omitempty"`
 }
 
 // DefaultConfig returns a Config with sensible defaults
@@ -99,6 +102,27 @@ func (c *Config) Validate() error {
 	// Ensure foundation_path is a relative path
 	if filepath.IsAbs(c.FoundationPath) {
 		return fmt.Errorf("foundation_path must be a relative path, got: %s", c.FoundationPath)
+	}
+
+	// Validate remotes
+	remoteNames := make(map[string]bool)
+	for _, remote := range c.Remotes {
+		if remote.Name == "" {
+			return fmt.Errorf("remote name cannot be empty")
+		}
+		// Validate remote name doesn't contain path separators or traversal sequences
+		if remote.Name != filepath.Base(remote.Name) ||
+			strings.Contains(remote.Name, "..") ||
+			strings.ContainsAny(remote.Name, `/\`) {
+			return fmt.Errorf("invalid remote name '%s': must be a simple name without path separators", remote.Name)
+		}
+		if remote.Path == "" {
+			return fmt.Errorf("remote path cannot be empty for remote '%s'", remote.Name)
+		}
+		if remoteNames[remote.Name] {
+			return fmt.Errorf("duplicate remote name: %s", remote.Name)
+		}
+		remoteNames[remote.Name] = true
 	}
 
 	return nil
