@@ -80,8 +80,8 @@ release:
   github:
     owner: neev-kit
     name: neev
-  draft: true
-  prerelease: auto
+  draft: false
+  prerelease: false
   mode: keep-existing
 
 changelog:
