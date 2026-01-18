@@ -2,7 +2,6 @@ package bridge
 
 import (
 	"fmt"
-	"io/ioutil"
 	"os"
 	"path/filepath"
 	"strings"
@@ -21,7 +20,7 @@ func BuildContext(focus string) (string, error) {
 
 	// Read blueprint files
 	blueprintsPath := ".neev/blueprints"
-	files, err := ioutil.ReadDir(blueprintsPath)
+	files, err := os.ReadDir(blueprintsPath)
 	if err != nil {
 		return "", fmt.Errorf("failed to read blueprints directory: %w", err)
 	}
@@ -51,7 +50,7 @@ func BuildRemoteContext() (string, error) {
 	contextBuilder.WriteString("# Remote Foundations\n\n")
 
 	// Read each remote directory
-	remotes, err := ioutil.ReadDir(remotesPath)
+	remotes, err := os.ReadDir(remotesPath)
 	if err != nil {
 		return "", fmt.Errorf("failed to read remotes directory: %w", err)
 	}
@@ -80,14 +79,14 @@ func BuildRemoteContext() (string, error) {
 }
 
 func readFilesInDir(dir string, builder *strings.Builder, focus string) error {
-	files, err := ioutil.ReadDir(dir)
+	files, err := os.ReadDir(dir)
 	if err != nil {
 		return fmt.Errorf("failed to read directory %s: %w", dir, err)
 	}
 
 	for _, file := range files {
 		if filepath.Ext(file.Name()) == ".md" {
-			content, err := ioutil.ReadFile(filepath.Join(dir, file.Name()))
+			content, err := os.ReadFile(filepath.Join(dir, file.Name()))
 			if err != nil {
 				return fmt.Errorf("failed to read file %s: %w", file.Name(), err)
 			}

@@ -2,7 +2,6 @@ package instructions
 
 import (
 	"fmt"
-	"io/ioutil"
 	"os"
 	"path/filepath"
 	"strings"
@@ -57,7 +56,7 @@ func CopilotInstructions(rootDir string) (string, error) {
 
 				// Read intent if available
 				intentPath := filepath.Join(blueprintPath, "intent.md")
-				if intentData, err := ioutil.ReadFile(intentPath); err == nil {
+				if intentData, err := os.ReadFile(intentPath); err == nil {
 					builder.WriteString(fmt.Sprintf("### Blueprint: %s\n\n", blueprintName))
 					
 					// Extract first paragraph or first 200 chars as summary
