@@ -1,0 +1,16 @@
+mode: set
+github.com/neev-kit/neev/core/foundation/init.go:19.35,23.45 2 1
+github.com/neev-kit/neev/core/foundation/init.go:23.45,25.3 1 1
+github.com/neev-kit/neev/core/foundation/init.go:25.8,25.32 1 1
+github.com/neev-kit/neev/core/foundation/init.go:25.32,27.3 1 0
+github.com/neev-kit/neev/core/foundation/init.go:30.2,30.52 1 1
+github.com/neev-kit/neev/core/foundation/init.go:30.52,32.3 1 1
+github.com/neev-kit/neev/core/foundation/init.go:35.2,36.58 2 1
+github.com/neev-kit/neev/core/foundation/init.go:36.58,38.3 1 0
+github.com/neev-kit/neev/core/foundation/init.go:41.2,42.58 2 1
+github.com/neev-kit/neev/core/foundation/init.go:42.58,44.3 1 0
+github.com/neev-kit/neev/core/foundation/init.go:47.2,55.16 4 1
+github.com/neev-kit/neev/core/foundation/init.go:55.16,57.3 1 0
+github.com/neev-kit/neev/core/foundation/init.go:59.2,59.67 1 1
+github.com/neev-kit/neev/core/foundation/init.go:59.67,61.3 1 0
+github.com/neev-kit/neev/core/foundation/init.go:63.2,63.12 1 1
