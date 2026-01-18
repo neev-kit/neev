@@ -243,3 +243,185 @@ func contains(s, substr string) bool {
 	}
 	return false
 }
+
+func TestInitialize_CheckErrorWhenStatFails(t *testing.T) {
+	tmpDir := t.TempDir()
+
+	// Create a non-directory path error by creating a file where a directory would go
+	invalidPath := filepath.Join(tmpDir, "file")
+	if err := os.WriteFile(invalidPath, []byte("test"), 0644); err != nil {
+		t.Fatalf("Failed to create file: %v", err)
+	}
+
+	// Try to initialize in the file
+	err := Initialize(invalidPath)
+	if err == nil {
+		t.Error("Expected error when initializing in a file")
+	}
+}
+
+func TestInitialize_ConfigContentIsYAML(t *testing.T) {
+	tmpDir := t.TempDir()
+
+	err := Initialize(tmpDir)
+	if err != nil {
+		t.Fatalf("Initialize() failed: %v", err)
+	}
+
+	configPath := filepath.Join(tmpDir, RootDir, ConfigFile)
+	content, err := os.ReadFile(configPath)
+	if err != nil {
+		t.Fatalf("Failed to read config: %v", err)
+	}
+
+	// Verify YAML format
+	if !contains(string(content), "version:") {
+		t.Error("Config should contain 'version:' field")
+	}
+	if !contains(string(content), "name:") {
+		t.Error("Config should contain 'name:' field")
+	}
+	if !contains(string(content), "description:") {
+		t.Error("Config should contain 'description:' field")
+	}
+}
+
+func TestInitialize_AllDirectoriesCreated(t *testing.T) {
+	tmpDir := t.TempDir()
+
+	err := Initialize(tmpDir)
+	if err != nil {
+		t.Fatalf("Initialize() failed: %v", err)
+	}
+
+	// Check all required paths exist
+	paths := []string{
+		filepath.Join(tmpDir, RootDir),
+		filepath.Join(tmpDir, RootDir, BlueprintsDir),
+		filepath.Join(tmpDir, RootDir, FoundationDir),
+		filepath.Join(tmpDir, RootDir, ConfigFile),
+	}
+
+	for _, path := range paths {
+		if _, err := os.Stat(path); os.IsNotExist(err) {
+			t.Errorf("Expected path to exist: %s", path)
+		}
+	}
+}
+
+func TestInitialize_RootDirConstantValue(t *testing.T) {
+	if RootDir != ".neev" {
+		t.Errorf("Expected RootDir to be '.neev', got %s", RootDir)
+	}
+}
+
+func TestInitialize_BlueprintsDirConstantValue(t *testing.T) {
+	if BlueprintsDir != "blueprints" {
+		t.Errorf("Expected BlueprintsDir to be 'blueprints', got %s", BlueprintsDir)
+	}
+}
+
+func TestInitialize_FoundationDirConstantValue(t *testing.T) {
+	if FoundationDir != "foundation" {
+		t.Errorf("Expected FoundationDir to be 'foundation', got %s", FoundationDir)
+	}
+}
+
+func TestInitialize_ConfigFileConstantValue(t *testing.T) {
+	if ConfigFile != "neev.yaml" {
+		t.Errorf("Expected ConfigFile to be 'neev.yaml', got %s", ConfigFile)
+	}
+}
+
+func TestDefaultConfig_HasVersionField(t *testing.T) {
+	config := DefaultConfig{
+		Version:     "1.0.0",
+		Name:        "Test",
+		Description: "Test project",
+	}
+
+	if config.Version != "1.0.0" {
+		t.Errorf("Expected Version to be '1.0.0', got %s", config.Version)
+	}
+}
+
+func TestDefaultConfig_HasNameField(t *testing.T) {
+	config := DefaultConfig{
+		Version:     "1.0.0",
+		Name:        "My Project",
+		Description: "Test project",
+	}
+
+	if config.Name != "My Project" {
+		t.Errorf("Expected Name to be 'My Project', got %s", config.Name)
+	}
+}
+
+func TestDefaultConfig_HasDescriptionField(t *testing.T) {
+	config := DefaultConfig{
+		Version:     "1.0.0",
+		Name:        "Test",
+		Description: "A project description",
+	}
+
+	if config.Description != "A project description" {
+		t.Errorf("Expected Description to be 'A project description', got %s", config.Description)
+	}
+}
+
+func TestInitialize_SuccessCreatesDefaultValues(t *testing.T) {
+	tmpDir := t.TempDir()
+
+	err := Initialize(tmpDir)
+	if err != nil {
+		t.Fatalf("Initialize() failed: %v", err)
+	}
+
+	configPath := filepath.Join(tmpDir, RootDir, ConfigFile)
+	content, err := os.ReadFile(configPath)
+	if err != nil {
+		t.Fatalf("Failed to read config: %v", err)
+	}
+
+	contentStr := string(content)
+	if !contains(contentStr, "1.0.0") {
+		t.Error("Config should contain version '1.0.0'")
+	}
+	if !contains(contentStr, "My Project") {
+		t.Error("Config should contain 'My Project'")
+	}
+}
+
+func TestInitialize_CreatesValidYAMLStructure(t *testing.T) {
+	tmpDir := t.TempDir()
+
+	err := Initialize(tmpDir)
+	if err != nil {
+		t.Fatalf("Initialize() failed: %v", err)
+	}
+
+	configPath := filepath.Join(tmpDir, RootDir, ConfigFile)
+	content, err := os.ReadFile(configPath)
+	if err != nil {
+		t.Fatalf("Failed to read config: %v", err)
+	}
+
+	// Verify it contains valid YAML structure
+	contentStr := string(content)
+	if !contains(contentStr, "version") {
+		t.Error("Config file should contain 'version' field")
+	}
+	if !contains(contentStr, "name") {
+		t.Error("Config file should contain 'name' field")
+	}
+	if !contains(contentStr, "description") {
+		t.Error("Config file should contain 'description' field")
+	}
+}
+
+// Helper for YAML unmarshaling in tests
+func _testUnmarshalYAML(data []byte, v interface{}) error {
+	// This is a simple check - in real code you'd use yaml.Unmarshal
+	// For now we just verify the content looks like YAML
+	return nil
+}

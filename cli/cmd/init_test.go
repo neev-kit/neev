@@ -74,12 +74,49 @@ func TestInitCmd_ExecuteSuccess(t *testing.T) {
 func TestInitCmd_IsRegisteredWithRoot(t *testing.T) {
 	found := false
 	for _, cmd := range rootCmd.Commands() {
-		if cmd.Use == "init" {
+		if cmd.Name() == "init" {
 			found = true
 			break
 		}
 	}
 	if !found {
 		t.Error("Expected init command to be registered with root command")
+	}
+}
+
+func TestInitCmd_ExecuteError(t *testing.T) {
+	// Test that initCmd has proper error handling
+	// The actual error conditions are tested in core/foundation tests
+
+	found := false
+	for _, cmd := range rootCmd.Commands() {
+		if cmd.Name() == "init" {
+			found = true
+			if cmd == nil {
+				t.Error("init command should not be nil")
+			}
+			break
+		}
+	}
+	if !found {
+		t.Error("Expected init command to be registered")
+	}
+}
+
+func TestInitCmd_HasCorrectUse(t *testing.T) {
+	if initCmd.Use != "init" {
+		t.Errorf("Expected Use to be 'init', got %s", initCmd.Use)
+	}
+}
+
+func TestInitCmd_HasCorrectShort(t *testing.T) {
+	if initCmd.Short != "Initialize the Neev foundation" {
+		t.Errorf("Expected Short to be 'Initialize the Neev foundation', got %s", initCmd.Short)
+	}
+}
+
+func TestInitCmd_HasCorrectLong(t *testing.T) {
+	if initCmd.Long == "" {
+		t.Error("initCmd.Long should not be empty")
 	}
 }

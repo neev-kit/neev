@@ -1,9 +1,12 @@
 mode: set
-github.com/neev-kit/neev/cli/main.go:7.13,9.2 1 0
-github.com/neev-kit/neev/cli/cmd/bridge.go:13.47,15.3 1 1
-github.com/neev-kit/neev/cli/cmd/bridge.go:18.13,20.2 1 1
-github.com/neev-kit/neev/cli/cmd/draft.go:13.47,15.3 1 1
-github.com/neev-kit/neev/cli/cmd/draft.go:18.13,20.2 1 1
+github.com/neev-kit/neev/cli/cmd/bridge.go:14.47,17.17 3 1
+github.com/neev-kit/neev/cli/cmd/bridge.go:17.17,20.4 2 0
+github.com/neev-kit/neev/cli/cmd/bridge.go:21.3,21.23 1 1
+github.com/neev-kit/neev/cli/cmd/bridge.go:25.13,28.2 2 1
+github.com/neev-kit/neev/cli/cmd/draft.go:16.47,20.47 3 1
+github.com/neev-kit/neev/cli/cmd/draft.go:20.47,22.4 1 1
+github.com/neev-kit/neev/cli/cmd/draft.go:22.9,24.4 1 1
+github.com/neev-kit/neev/cli/cmd/draft.go:28.13,30.2 1 1
 github.com/neev-kit/neev/cli/cmd/init.go:16.47,27.52 4 1
 github.com/neev-kit/neev/cli/cmd/init.go:27.52,35.4 3 0
 github.com/neev-kit/neev/cli/cmd/init.go:37.3,42.72 2 1

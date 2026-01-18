@@ -66,3 +66,120 @@ func TestRootCmd_InitFunction(t *testing.T) {
 		t.Error("Expected rootCmd to be initialized")
 	}
 }
+
+func TestRootCmd_HasSubcommands(t *testing.T) {
+	commands := rootCmd.Commands()
+	if len(commands) == 0 {
+		t.Error("Expected root command to have subcommands")
+	}
+
+	// Check for expected commands
+	expectedCmds := []string{"init", "draft", "bridge"}
+	for _, expectedCmd := range expectedCmds {
+		found := false
+		for _, cmd := range commands {
+			if cmd.Name() == expectedCmd {
+				found = true
+				break
+			}
+		}
+		if !found {
+			t.Errorf("Expected %s command to be registered", expectedCmd)
+		}
+	}
+}
+
+func TestExecute_WithRootOnly(t *testing.T) {
+	// Capture output
+	oldStdout := os.Stdout
+	r, w, _ := os.Pipe()
+	os.Stdout = w
+
+	rootCmd.Run(rootCmd, []string{})
+
+	w.Close()
+	os.Stdout = oldStdout
+
+	var buf bytes.Buffer
+	buf.ReadFrom(r)
+	output := buf.String()
+
+	if output == "" {
+		t.Error("Expected output from root command")
+	}
+}
+
+func TestRootCmd_RunnableCommand(t *testing.T) {
+	if !rootCmd.Runnable() {
+		t.Error("Root command should be runnable")
+	}
+}
+
+func TestRootCmd_Short_NotEmpty(t *testing.T) {
+	if rootCmd.Short == "" {
+		t.Error("Root command Short should not be empty")
+	}
+}
+
+func TestRootCmd_Long_NotEmpty(t *testing.T) {
+	if rootCmd.Long == "" {
+		t.Error("Root command Long should not be empty")
+	}
+}
+
+func TestInitCmd_NotEmpty(t *testing.T) {
+	found := false
+	for _, cmd := range rootCmd.Commands() {
+		if cmd.Name() == "init" {
+			found = true
+			if cmd.Short == "" {
+				t.Error("Init command Short should not be empty")
+			}
+			if cmd.Long == "" {
+				t.Error("Init command Long should not be empty")
+			}
+			break
+		}
+	}
+	if !found {
+		t.Error("Init command not found")
+	}
+}
+
+func TestDraftCmd_NotEmpty(t *testing.T) {
+	found := false
+	for _, cmd := range rootCmd.Commands() {
+		if cmd.Name() == "draft" {
+			found = true
+			if cmd.Short == "" {
+				t.Error("Draft command Short should not be empty")
+			}
+			if cmd.Long == "" {
+				t.Error("Draft command Long should not be empty")
+			}
+			break
+		}
+	}
+	if !found {
+		t.Error("Draft command not found")
+	}
+}
+
+func TestBridgeCmd_NotEmpty(t *testing.T) {
+	found := false
+	for _, cmd := range rootCmd.Commands() {
+		if cmd.Name() == "bridge" {
+			found = true
+			if cmd.Short == "" {
+				t.Error("Bridge command Short should not be empty")
+			}
+			if cmd.Long == "" {
+				t.Error("Bridge command Long should not be empty")
+			}
+			break
+		}
+	}
+	if !found {
+		t.Error("Bridge command not found")
+	}
+}
