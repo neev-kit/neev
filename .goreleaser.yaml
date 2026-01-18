@@ -1,0 +1,96 @@
+# GoReleaser configuration for Neev CLI
+# This configuration builds and releases binaries for multiple platforms
+# Supports: Darwin (Intel/ARM64), Linux, and Windows
+
+version: 2
+
+project_name: neev
+dist: dist
+
+before:
+  hooks:
+    - go mod tidy
+    - go test ./...
+
+builds:
+  - id: "neev"
+    main: ./cli/main.go
+    binary: neev
+    env:
+      - CGO_ENABLED=0
+    goos:
+      - linux
+      - darwin
+      - windows
+    goarch:
+      - amd64
+      - arm64
+    ignore:
+      - goos: windows
+        goarch: arm64
+    ldflags:
+      - -s -w
+      - -X github.com/neev-kit/neev/cli/cmd.Version={{.Version}}
+      - -X github.com/neev-kit/neev/cli/cmd.Commit={{.Commit}}
+      - -X github.com/neev-kit/neev/cli/cmd.Date={{.Date}}
+
+archives:
+  - id: "default"
+    format: tar.gz
+    format_overrides:
+      - goos: windows
+        format: zip
+    name_template: "{{ .ProjectName }}_{{ .Version }}_{{ .Os }}_{{ .Arch }}"
+    wrap_in_directory: true
+    files:
+      - README.md
+      - LICENSE
+      - CHANGELOG.md
+
+# Homebrew formula generation
+# Uncomment and configure when ready to publish to a Homebrew tap
+# Requirements: Set HOMEBREW_TAP_TOKEN environment variable
+# brews:
+#   - repository:
+#       owner: neev-kit
+#       name: homebrew-neev
+#       token: "{{ .Env.HOMEBREW_TAP_TOKEN }}"
+#     directory: Formula
+#     homepage: "https://github.com/neev-kit/neev"
+#     description: "Neev: A modular blueprint-driven architecture tool"
+#     license: "MIT"
+#     test: |
+#       system "#{bin}/neev --help"
+#     dependencies:
+#       - name: go
+#         type: optional
+#     install: |
+#       bin.install "neev"
+#     post_install: |
+#       puts "Neev installed successfully! Run 'neev --help' to get started."
+
+# Checksum file
+checksum:
+  name_template: "{{ .ProjectName }}_{{ .Version }}_checksums.txt"
+  algorithm: sha256
+
+snapshot:
+  name_template: "{{ incpatch .Version }}-next"
+
+release:
+  github:
+    owner: neev-kit
+    name: neev
+  draft: true
+  prerelease: auto
+  mode: keep-existing
+
+changelog:
+  sort: asc
+  filters:
+    exclude:
+      - "^docs:"
+      - "^test:"
+      - "^chore:"
+      - "^style:"
+      - "^ci:"

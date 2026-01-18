@@ -5,6 +5,8 @@ import (
 	"os"
 	"path/filepath"
 	"time"
+
+	neevErr "github.com/neev-kit/neev/core/errors"
 )
 
 // Lay archives a blueprint by moving it to the foundation archive and updating changelog
@@ -14,7 +16,7 @@ func Lay(blueprintName string) error {
 
 	// Check if blueprint exists
 	if _, err := os.Stat(blueprintPath); os.IsNotExist(err) {
-		return fmt.Errorf("blueprint '%s' not found at %s", blueprintName, blueprintPath)
+		return neevErr.ErrBlueprintNotFound(blueprintName)
 	}
 
 	// Create archive directory if it doesn't exist

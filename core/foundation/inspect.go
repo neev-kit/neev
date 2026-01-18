@@ -5,9 +5,12 @@ import (
 	"os"
 	"path/filepath"
 	"strings"
+
+	"github.com/neev-kit/neev/core/config"
+	neevErr "github.com/neev-kit/neev/core/errors"
 )
 
-// ignoredDirs contains directories to skip during walk
+// ignoredDirs contains default directories to skip during walk
 var ignoredDirs = map[string]bool{
 	".git":         true,
 	".neev":        true,
@@ -23,21 +26,45 @@ var ignoredDirs = map[string]bool{
 	"target":       true,
 }
 
+// InspectWithConfig checks for drift using a configuration object
+func InspectWithConfig(cwd string, cfg *config.Config) ([]string, error) {
+	// Convert config ignore dirs to map
+	ignoredDirsMap := make(map[string]bool)
+	for _, dir := range cfg.IgnoreDirs {
+		ignoredDirsMap[dir] = true
+	}
+
+	return inspectInternal(cwd, ignoredDirsMap)
+}
+
 // Inspect checks for drift between foundation specs and actual code structure
 func Inspect(cwd string) ([]string, error) {
+	return inspectInternal(cwd, ignoredDirs)
+}
+
+// inspectInternal performs the actual inspection with custom ignored directories
+func inspectInternal(cwd string, ignored map[string]bool) ([]string, error) {
 	var warnings []string
 
 	// Get foundation modules
 	foundationPath := filepath.Join(cwd, RootDir, FoundationDir)
 	foundationModules, err := getFoundationModules(foundationPath)
 	if err != nil {
-		return nil, fmt.Errorf("failed to read foundation modules: %w", err)
+		return nil, neevErr.NewNeevError(
+			neevErr.ErrTypeFoundation,
+			"failed to read foundation modules",
+			err,
+		)
 	}
 
 	// Get code modules (directories in src/ or root)
-	codeModules, err := getCodeModules(cwd)
+	codeModules, err := getCodeModulesWithIgnored(cwd, ignored)
 	if err != nil {
-		return nil, fmt.Errorf("failed to scan code modules: %w", err)
+		return nil, neevErr.NewNeevError(
+			neevErr.ErrTypeIO,
+			"failed to scan code modules",
+			err,
+		)
 	}
 
 	// Check for missing code directories
@@ -68,7 +95,7 @@ func getFoundationModules(foundationPath string) (map[string]bool, error) {
 
 	entries, err := os.ReadDir(foundationPath)
 	if err != nil {
-		return nil, fmt.Errorf("failed to read foundation directory: %w", err)
+		return nil, err
 	}
 
 	// Skip the archive directory
@@ -89,6 +116,11 @@ func getFoundationModules(foundationPath string) (map[string]bool, error) {
 
 // getCodeModules returns a set of module directory names from the code structure
 func getCodeModules(cwd string) (map[string]bool, error) {
+	return getCodeModulesWithIgnored(cwd, ignoredDirs)
+}
+
+// getCodeModulesWithIgnored returns a set of module directory names, respecting ignored dirs
+func getCodeModulesWithIgnored(cwd string, ignored map[string]bool) (map[string]bool, error) {
 	modules := make(map[string]bool)
 
 	// Try src/ first, fall back to root
@@ -100,7 +132,7 @@ func getCodeModules(cwd string) (map[string]bool, error) {
 
 	entries, err := os.ReadDir(scanPath)
 	if err != nil {
-		return nil, fmt.Errorf("failed to read code directory: %w", err)
+		return nil, err
 	}
 
 	for _, entry := range entries {
@@ -111,7 +143,7 @@ func getCodeModules(cwd string) (map[string]bool, error) {
 		name := entry.Name()
 
 		// Skip ignored directories
-		if ignoredDirs[name] {
+		if ignored[name] {
 			continue
 		}
 

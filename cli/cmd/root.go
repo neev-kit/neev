@@ -4,6 +4,8 @@ import (
 	"fmt"
 	"os"
 
+	"github.com/neev-kit/neev/core/errors"
+	"github.com/neev-kit/neev/core/logger"
 	"github.com/spf13/cobra"
 )
 
@@ -17,8 +19,17 @@ var rootCmd = &cobra.Command{
 }
 
 func Execute() {
+	// Initialize logger
+	logger.Init()
+
 	if err := rootCmd.Execute(); err != nil {
-		fmt.Println(err)
+		// Check if it's a NeevError for user-friendly output
+		if neevErr, ok := err.(*errors.NeevError); ok {
+			fmt.Printf("Error: %v\n", neevErr)
+			fmt.Printf("💡 %s\n", neevErr.GetSolutionHint())
+		} else {
+			fmt.Printf("Error: %v\n", err)
+		}
 		os.Exit(1)
 	}
 }
