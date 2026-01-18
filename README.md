@@ -1,234 +1,505 @@
-# Neev - AI-Ready Blueprint Framework
+# 🏗️ Neev - AI-Ready Blueprint Framework
 
-Neev is a Go-based CLI framework that helps developers create and manage project blueprints for AI integration. It provides tools to draft blueprints, aggregate project context, and bridge to external systems like AI agents.
+[![Go Version](https://img.shields.io/badge/Go-1.23+-00ADD8?style=flat-square&logo=go)](https://golang.org/dl/)
+[![License](https://img.shields.io/badge/License-MIT-blue.svg?style=flat-square)](LICENSE)
+[![Tests](https://img.shields.io/github/actions/workflow/status/neev-kit/neev/tests.yml?branch=main&style=flat-square&label=Tests)](https://github.com/neev-kit/neev/actions)
+[![Release](https://img.shields.io/github/v/release/neev-kit/neev?style=flat-square&label=Release)](https://github.com/neev-kit/neev/releases)
 
-## Features
+**Build better software by bridging project intent with AI coding assistants.**
 
-- **🏗️ Project Initialization** (`neev init`) - Set up a `.neev` foundation directory with configuration
-- **📝 Blueprint Drafting** (`neev draft`) - Create structured blueprint templates for your project
-- **🌉 Context Bridging** (`neev bridge`) - Aggregate project context for AI agents and external tools
+Neev is a lightweight CLI framework that helps you capture project blueprints, aggregate context, and seamlessly hand off to AI agents. No dependencies on external APIs or complex setup — just structured markdown files versioned in your repository.
+
+## Why Neev?
+
+Traditional AI coding assistants work best with clear project context. Neev solves this by:
+
+- **🎯 Explicit Intent**: Capture what you want to build before implementation
+- **📚 Organized Context**: Structure project knowledge in `.neev/` (version controlled)
+- **🤖 AI-Ready**: Generate context aggregations perfect for LLM consumption
+- **🔧 Zero Friction**: Works with any AI tool — no API keys or configuration
+- **⚡ Fast Setup**: Initialize and start drafting in seconds
 
 ## Quick Start
 
-### Installation
+### 1. Installation
 
 ```bash
-# Clone the repository
-git clone https://github.com/neev-kit/neev
+# Clone and build
+git clone https://github.com/neev-kit/neev.git
 cd neev
-
-# Install dependencies
 go mod download
-
-# Build the CLI
 go build -o neev ./cli
+
+# Or install from source
+go install github.com/neev-kit/neev/cli@latest
+
+# Verify
+neev --version
 ```
 
-### Basic Usage
+### 2. Initialize Your Project
 
 ```bash
-# Initialize a new project foundation
-./neev init
-
-# Create a new blueprint
-./neev draft "my-blueprint"
-
-# Aggregate project context
-./neev bridge
-
-# Get context with specific focus
-./neev bridge --focus "database"
+cd /path/to/your/project
+neev init
 ```
 
-## Project Structure
+Creates:
+```
+.neev/
+├── neev.yaml              # Project configuration
+├── blueprints/            # Your blueprint collection
+└── foundation/            # Project foundations & principles
+```
+
+### 3. Create Your First Blueprint
+
+```bash
+neev draft "user-authentication"
+neev draft "Database Schema"
+```
+
+### 4. Aggregate Context for AI
+
+```bash
+# Get full project context
+neev bridge
+
+# Filter by keyword
+neev bridge --focus "authentication"
+
+# Save to file
+neev bridge > context.md
+```
+
+## Core Concepts
+
+### Blueprint
+A markdown-based specification of a feature or component you want to build. Each blueprint is self-contained and can reference others.
+
+**Example**:
+```
+.neev/blueprints/user-auth/
+├── intent.md          # What and why
+├── architecture.md    # How it works
+├── api-spec.md        # API contracts
+└── security.md        # Security considerations
+```
+
+### Foundation
+Project-wide principles, conventions, and architectural decisions. Shared across all blueprints.
+
+**Example**:
+```
+.neev/foundation/
+├── principles.md      # Project values
+├── stack.md           # Technology choices
+└── conventions.md     # Coding standards
+```
+
+### Context
+Aggregated, searchable project information ready for AI consumption. Generated via `neev bridge`.
+
+## How It Works
 
 ```
-neev/
-├── cli/                         # CLI application
-│   ├── main.go                 # Entry point
-│   └── cmd/                    # Cobra commands
-│       ├── root.go             # Root command
-│       ├── init.go             # Init command
-│       ├── draft.go            # Draft command
-│       └── bridge.go           # Bridge command
-├── core/                        # Core functionality
-│   ├── foundation/             # Project foundation
-│   │   ├── paths.go            # Constants and paths
-│   │   └── init.go             # Initialization logic
-│   ├── blueprint/              # Blueprint management
-│   │   └── draft.go            # Draft creation
-│   └── bridge/                 # Context aggregation
-│       └── context.go          # Context building
-└── .neev/                      # Generated project directory
-    ├── neev.yaml               # Project configuration
-    ├── blueprints/             # Blueprint storage
-    └── foundation/             # Foundation specs
+┌─────────────────────────────┐
+│  Write Blueprints & Docs    │
+│  (Markdown in .neev/)       │
+└────────────┬────────────────┘
+             │
+             ▼
+┌─────────────────────────────┐
+│  Run: neev bridge           │
+│  (Aggregate & optionally    │
+│   filter by keywords)       │
+└────────────┬────────────────┘
+             │
+             ▼
+┌─────────────────────────────┐
+│  Get Context Output         │
+│  (Ready for AI agents)      │
+└────────────┬────────────────┘
+             │
+             ▼
+┌─────────────────────────────┐
+│  Share with AI Coding       │
+│  Assistant (Claude, Cursor, │
+│  GitHub Copilot, etc.)      │
+└─────────────────────────────┘
 ```
 
 ## Commands
 
 ### `neev init`
 
-Initialize a new Neev foundation in your project.
+Initialize Neev in your project.
 
-**Usage:**
 ```bash
 neev init
 ```
 
-**What it does:**
-- Creates `.neev/` directory structure
-- Generates `neev.yaml` configuration file
-- Sets up `blueprints/` and `foundation/` subdirectories
-- Prevents accidental overwrites of existing projects
-
-**Output:**
-```
-🏗️  Laying foundation in /path/to/project
-✅ Foundation laid successfully!
-```
+**Creates:**
+- `.neev/` directory structure
+- `neev.yaml` configuration file
+- Empty `blueprints/` and `foundation/` directories
+- Prevents accidental overwrites
 
 ### `neev draft <title>`
 
-Create a new blueprint for your project.
+Create a new blueprint with template files.
 
-**Usage:**
 ```bash
-neev draft "my-blueprint"
-neev draft "Authentication Service"
+neev draft "user-authentication"
+neev draft "API Gateway"
 ```
 
-**What it does:**
-- Sanitizes the blueprint name (converts to lowercase, replaces spaces with hyphens)
-- Creates blueprint directory in `.neev/blueprints/`
-- Generates template files (`intent.md`, `architecture.md`)
-- Prevents duplicate blueprint names
-
-**Output:**
-```
-✅ Created blueprint at .neev/blueprints/my-blueprint
-✅ Created blueprint at .neev/blueprints/authentication-service
-```
+**Creates:**
+- Blueprint directory with sanitized name
+- `intent.md` — Purpose and goals
+- `architecture.md` — Technical design
 
 ### `neev bridge [flags]`
 
-Aggregate project context for AI agents and external systems.
+Aggregate and output project context.
 
-**Usage:**
 ```bash
-neev bridge
-neev bridge --focus "database"
-neev bridge -f "authentication"
+neev bridge                    # Full context
+neev bridge --focus auth       # Filter by keyword
+neev bridge -f db > context.md # Save to file
 ```
 
 **Flags:**
-- `--focus, -f` (string) - Filter context by keyword
+- `--focus, -f` — Filter by keyword
 
-**What it does:**
-- Reads all `.md` files from `.neev/foundation/`
-- Reads all `.md` files from `.neev/blueprints/`
-- Aggregates content into a single context string
-- Optionally filters by focus keyword if provided
-- Returns formatted context suitable for AI processing
+**Output:** Markdown with all foundation + blueprint content
 
-**Output:**
-```
-# Project Foundation
-## File: neev.yaml
-...
+### `neev inspect` (internal)
 
-## File: intent.md
-...
+Analyze project structure and find missing blueprints.
 
-## File: architecture.md
-...
+```bash
+neev inspect
 ```
 
 ## Configuration
 
-The `neev.yaml` configuration file is auto-generated during initialization:
+The `neev.yaml` file controls Neev behavior:
 
 ```yaml
-version: "1.0"
-name: "my-project"
-description: "Project description"
+project_name: My Project
+foundation_path: .neev
+ignore_dirs:
+  - node_modules
+  - .git
+  - __pycache__
+  - vendor
 ```
 
-## Blueprint Structure
+**Options:**
+- `project_name` — Display name for your project
+- `foundation_path` — Where `.neev/` directory lives (default: `.neev`)
+- `ignore_dirs` — Directories to skip during inspection
 
-Each blueprint created with `neev draft` contains:
+## Project Structure (Neev Repository)
 
-- `intent.md` - Purpose and goals of the blueprint
-- `architecture.md` - Technical architecture details
+```
+neev/
+├── cli/                     # CLI commands
+│   └── cmd/
+│       ├── root.go          # Root command (logger init)
+│       ├── init.go          # Initialize foundation
+│       ├── draft.go         # Create blueprints
+│       ├── bridge.go        # Aggregate context
+│       └── *_test.go        # Command tests
+│
+├── core/                    # Business logic
+│   ├── foundation/          # Init & inspect projects
+│   ├── blueprint/           # Blueprint management
+│   ├── bridge/              # Context aggregation
+│   ├── config/              # Configuration loading
+│   ├── errors/              # Custom error types
+│   └── logger/              # Structured logging
+│
+├── .github/workflows/       # CI/CD
+│   ├── tests.yml            # Run tests
+│   └── release.yml          # Build & release
+│
+└── Documentation
+    ├── README.md            # This file
+    ├── CONTRIBUTING.md      # Development guidelines
+    ├── DEVELOPMENT.md       # Setup & debugging
+    ├── ARCHITECTURE.md      # System design
+    └── USAGE.md             # Detailed usage guide
+```
 
-You can extend blueprints by adding additional `.md` files that will be included when running `neev bridge`.
+## Getting Started
 
-## Development
-
-### Building from Source
+### Step 1: Install Neev
 
 ```bash
-go run ./cli init
-go run ./cli draft "test"
-go run ./cli bridge
+# Build from source
+git clone https://github.com/neev-kit/neev.git
+cd neev
+go build -o neev ./cli
+
+# Or use go install
+go install github.com/neev-kit/neev/cli@latest
 ```
 
-### Running Tests
+### Step 2: Initialize Your Project
 
 ```bash
-go test ./...
+cd /path/to/your/project
+neev init
 ```
 
-### Coverage
+### Step 3: Write Blueprints
 
 ```bash
-go test -cover ./...
+# Create blueprints for features you want to build
+neev draft "User Authentication"
+neev draft "Database Layer"
+neev draft "API Gateway"
+
+# Edit the generated files with details
+# .neev/blueprints/user-authentication/intent.md
+# .neev/blueprints/user-authentication/architecture.md
 ```
 
-## Architecture
+### Step 4: Use with AI Assistants
 
-### Core Module (`core/`)
+```bash
+# Generate context
+neev bridge > context.md
 
-- **foundation**: Project initialization and configuration
-- **blueprint**: Blueprint creation and management
-- **bridge**: Context aggregation logic
+# Copy to Claude, Cursor, GitHub Copilot, etc.
+# Or pipe directly to your AI tool
+neev bridge | pbcopy  # macOS
+neev bridge | xclip   # Linux
+```
 
-### CLI Module (`cli/`)
+## Examples
 
-Built with [Cobra](https://github.com/spf13/cobra), provides user-facing commands with rich terminal styling via [Lipgloss](https://github.com/charmbracelet/lipgloss).
+### Example: Building a Payment System
 
-### Key Dependencies
+**1. Create blueprints:**
+```bash
+neev draft "Payment Processing"
+neev draft "Webhook Management"
+neev draft "Error Handling"
+```
 
-- `github.com/spf13/cobra` - CLI framework
-- `github.com/spf13/viper` - Configuration management
-- `github.com/charmbracelet/lipgloss` - Terminal styling
-- `gopkg.in/yaml.v3` - YAML parsing
+**2. Add foundation:**
+```
+.neev/foundation/
+├── stack.md         # "We use Go, PostgreSQL, Redis"
+├── principles.md    # "Security first, simplicity second"
+└── patterns.md      # "Repository pattern, dependency injection"
+```
+
+**3. Aggregate context:**
+```bash
+neev bridge --focus payment
+```
+
+**4. Share with AI:**
+Paste the output into your AI coding assistant with your implementation request.
+
+### Example: Team Onboarding
+
+**1. Document architecture:**
+```bash
+neev draft "System Overview"
+neev draft "Authentication Flow"
+neev draft "Database Schema"
+```
+
+**2. Create foundation:**
+```
+.neev/foundation/contributing.md   # How to contribute
+.neev/foundation/conventions.md    # Code style & patterns
+```
+
+**3. Share with new team members:**
+```bash
+neev bridge > ONBOARDING.md
+```
 
 ## Use Cases
 
-### For Developers
-- Document project architecture and intent
-- Create reusable blueprint templates for common patterns
-- Share project context with AI coding assistants
+| Use Case | How Neev Helps |
+|----------|---|
+| **AI Pair Programming** | Context-aware coding with structured project knowledge |
+| **Onboarding** | New team members get structured project overview |
+| **Architecture Decisions** | Document and share technical choices |
+| **API Documentation** | Maintain API specs alongside implementation |
+| **Feature Planning** | Capture requirements before implementation |
+| **Code Review** | Reviewers understand intent + architecture |
 
-### For AI Integration
-- Generate structured prompts from project blueprints
-- Aggregate context for RAG (Retrieval-Augmented Generation) systems
-- Maintain consistent project documentation
+## Development
 
-### For Teams
-- Standardize project structure across repositories
-- Ensure new contributors understand project intent
-- Store architectural decisions in version control
+### Building & Testing
 
-## Contributing
+```bash
+# Build
+go build -o neev ./cli
 
-Contributions are welcome! Please feel free to submit a Pull Request.
+# Run tests
+go test ./...
+
+# Test coverage
+go test -cover ./...
+
+# Run specific command
+go run ./cli init
+```
+
+### Setup Local Development
+
+See [DEVELOPMENT.md](DEVELOPMENT.md) for:
+- Detailed setup instructions
+- IDE configuration (VSCode, GoLand)
+- Debugging with Delve
+- Performance profiling
+
+### Understanding the Codebase
+
+See [ARCHITECTURE.md](ARCHITECTURE.md) for:
+- System design overview
+- Component interactions
+- Data flow diagrams
+- Extension points
+
+### Contributing
+
+See [CONTRIBUTING.md](CONTRIBUTING.md) for:
+- Development workflow
+- Code standards
+- Testing guidelines
+- Commit conventions
+- PR process
+
+## Key Features
+
+- **🚀 Zero Setup** — No API keys, no dependencies, no cloud login
+- **🔒 Local First** — All files stored in `.neev/`, fully version controlled
+- **🎯 AI-Optimized** — Output structured for LLM consumption
+- **🎨 Markdown Native** — Work in the format you already know
+- **⚡ Multi-Module** — Go-based with modular architecture
+- **📦 Production Ready** — Structured logging, error handling, configuration management
+- **✅ Well Tested** — 50+ comprehensive tests across all packages
+- **🔄 CI/CD Ready** — GitHub Actions workflows included
+
+## Standards & Practices
+
+Neev follows industry best practices:
+
+- **Structured Logging** — `slog` for consistent, parseable logs
+- **Error Handling** — Custom error types with solution hints
+- **Configuration** — YAML-based with validation and defaults
+- **Testing** — Unit tests, integration tests, table-driven tests
+- **Conventional Commits** — Clear git history
+- **Clean Architecture** — Separation of concerns, testable design
+
+See [ARCHITECTURE.md](ARCHITECTURE.md) for details.
+
+## Comparison with Similar Tools
+
+| Feature | Neev | Spec-Kit | OpenSpec |
+|---------|------|----------|----------|
+| **Local Files** | ✅ | ✅ | ✅ |
+| **No External API** | ✅ | ✅ | ✅ |
+| **Greenfield (0→1)** | ✅ | ⭐ | ✅ |
+| **Brownfield (1→n)** | ✅ | ✅ | ⭐ |
+| **Blueprint Templates** | ✅ | ✅ | ✅ |
+| **Context Aggregation** | ✅ | Limited | ✅ |
+| **Written in** | Go | Python | TypeScript |
+| **CLI First** | ✅ | ✅ | ✅ |
+
+**Best For:**
+- **Neev** — Go projects, CLI tools, fast setup
+- **Spec-Kit** — Comprehensive spec-driven workflow
+- **OpenSpec** — Teams with complex change management
+
+## Real-World Example
+
+```bash
+# 1. Initialize in your Go project
+$ neev init
+
+# 2. Plan features as blueprints
+$ neev draft "User API"
+$ neev draft "Authentication"
+
+# 3. Document in .neev/foundation/
+# Edited: .neev/foundation/principles.md
+#   - Security-first design
+#   - RESTful APIs
+#   - PostgreSQL for persistence
+
+# 4. Get AI-ready context
+$ neev bridge --focus user > user-context.md
+
+# 5. Share with Claude/Copilot for implementation
+```
+
+The output is ready for: "Build this according to the context above"
+
+## Troubleshooting
+
+| Issue | Solution |
+|-------|----------|
+| `command not found: neev` | Ensure `$GOPATH/bin` is in `$PATH` or build locally |
+| `.neev` already exists | Use `neev init` only once per project |
+| No blueprints generated | Run `neev draft "name"` to create blueprints |
+| Bridge output is empty | Check that `.neev/foundation/` and `.neev/blueprints/` have `.md` files |
+
+See [USAGE.md](USAGE.md) for detailed troubleshooting.
+
+## FAQ
+
+**Q: Do I need to commit `.neev/` to git?**  
+A: Yes! `.neev/` contains your project knowledge and should be versioned.
+
+**Q: Can I use Neev with non-Go projects?**  
+A: Absolutely. Neev works with any project type.
+
+**Q: How does Neev compare to writing prompts manually?**  
+A: Neev structures your knowledge so AI gets context automatically, reducing manual copy/paste and keeping things in sync.
+
+**Q: Can teams share blueprints?**  
+A: Yes. Common patterns can be captured in `.neev/foundation/` and reused across projects.
+
+**Q: What about large projects?**  
+A: Use `--focus` flag to filter context by keywords. Blueprints can reference each other.
+
+## Status
+
+- ✅ **Phase 1**: Blueprint drafting & context bridging
+- ✅ **Phase 2**: Test coverage & CLI hardening
+- ✅ **Phase 3**: Comprehensive test suite
+- ✅ **Phase 4**: Production hardening (logging, errors, config, CI/CD)
+- 🚀 **v1.0.0**: Ready for production use
 
 ## License
 
-See LICENSE file for details.
+MIT License — See [LICENSE](LICENSE) file
 
-## Support
+## Contributing
 
-For issues and questions, please open an issue on GitHub.
+Contributions welcome! See [CONTRIBUTING.md](CONTRIBUTING.md)
+
+- 🐛 Found a bug? [Open an issue](https://github.com/neev-kit/neev/issues)
+- ✨ Have an idea? [Start a discussion](https://github.com/neev-kit/neev/discussions)
+- 🔧 Want to contribute? [See CONTRIBUTING.md](CONTRIBUTING.md)
+
+## Maintainers
+
+See [MAINTAINERS.md](MAINTAINERS.md) for core team and advisors.
+
+---
+
+**Ready to build better software with AI?** 
+
+👉 [Get Started](#quick-start) | 📖 [Full Guide](USAGE.md) | 🏗️ [Architecture](ARCHITECTURE.md) | 💻 [Development](DEVELOPMENT.md)
