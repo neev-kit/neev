@@ -16,6 +16,7 @@ import (
 var (
 	jsonOutput     bool
 	useDescriptors bool
+	strictMode     bool
 )
 
 var inspectCmd = &cobra.Command{
@@ -39,7 +40,7 @@ var inspectCmd = &cobra.Command{
 		// Use new structured inspect if descriptors are enabled or JSON output requested
 		if useDescriptors || jsonOutput {
 			foundationPath := filepath.Join(cwd, ".neev", "foundation")
-			
+
 			opts := inspect.InspectOptions{
 				RootDir:        cwd,
 				FoundationPath: foundationPath,
@@ -66,11 +67,21 @@ var inspectCmd = &cobra.Command{
 					return
 				}
 				fmt.Println(string(jsonData))
+
+				// Exit with error code if strict mode and drift found
+				if strictMode && (!result.Success || len(result.Warnings) > 0) {
+					os.Exit(1)
+				}
 				return
 			}
 
 			// Pretty print structured output
 			printStructuredResult(result)
+
+			// Exit with error code if strict mode and drift found
+			if strictMode && (!result.Success || len(result.Warnings) > 0) {
+				os.Exit(1)
+			}
 			return
 		}
 
@@ -106,6 +117,11 @@ var inspectCmd = &cobra.Command{
 
 		for _, warning := range warnings {
 			fmt.Println("  " + warning)
+		}
+
+		// Exit with error code if strict mode and drift found
+		if strictMode {
+			os.Exit(1)
 		}
 	},
 }
@@ -203,4 +219,5 @@ func init() {
 	rootCmd.AddCommand(inspectCmd)
 	inspectCmd.Flags().BoolVar(&jsonOutput, "json", false, "Output results in JSON format")
 	inspectCmd.Flags().BoolVar(&useDescriptors, "use-descriptors", false, "Use .module.yaml files for detailed inspection")
+	inspectCmd.Flags().BoolVar(&strictMode, "strict", false, "Exit with code 1 if any drift is detected (for CI pipelines)")
 }
