@@ -204,5 +204,3 @@ func TestInspect_MultipleModules(t *testing.T) {
 		t.Errorf("Expected no warnings with all matching specs, got: %v", warnings)
 	}
 }
-
-

@@ -9,18 +9,18 @@ import (
 
 // ignoredDirs contains directories to skip during walk
 var ignoredDirs = map[string]bool{
-	".git":        true,
-	".neev":       true,
+	".git":         true,
+	".neev":        true,
 	"node_modules": true,
-	"dist":        true,
-	"vendor":      true,
-	"build":       true,
-	".env":        true,
-	"bin":         true,
-	"obj":         true,
-	".idea":       true,
-	".vscode":     true,
-	"target":      true,
+	"dist":         true,
+	"vendor":       true,
+	"build":        true,
+	".env":         true,
+	"bin":          true,
+	"obj":          true,
+	".idea":        true,
+	".vscode":      true,
+	"target":       true,
 }
 
 // Inspect checks for drift between foundation specs and actual code structure
