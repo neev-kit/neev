@@ -33,7 +33,14 @@ Example neev.yaml configuration:
       public_only: false
 `,
 	Run: func(cmd *cobra.Command, args []string) {
-		cwd, _ := os.Getwd()
+		cwd, err := os.Getwd()
+		if err != nil {
+			errorStyle := lipgloss.NewStyle().
+				Bold(true).
+				Foreground(lipgloss.Color("1"))
+			fmt.Println(errorStyle.Render("❌ Failed to determine current working directory: " + err.Error()))
+			return
+		}
 
 		// Load config
 		cfg, err := config.LoadConfig(cwd)

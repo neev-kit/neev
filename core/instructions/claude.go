@@ -24,11 +24,24 @@ func FormatForClaude(context string) string {
 	// Split on lines starting with "# " to find markdown headers
 	lines := strings.Split(context, "\n")
 	inSection := false
+	sawHeader := false
+	var preHeaderLines []string
+	
 	for _, line := range lines {
 		trimmed := strings.TrimSpace(line)
 		// Check if this is a markdown header (starts with # at beginning of line)
 		if strings.HasPrefix(trimmed, "# ") {
-			if inSection {
+			// If this is the first header and we have pre-header content,
+			// emit it as a general context section before the first header.
+			if !sawHeader && len(preHeaderLines) > 0 {
+				builder.WriteString("## 📚 GENERAL CONTEXT\n")
+				for _, preLine := range preHeaderLines {
+					builder.WriteString(preLine)
+					builder.WriteString("\n")
+				}
+				builder.WriteString("\n")
+				preHeaderLines = nil
+			} else if inSection {
 				builder.WriteString("\n")
 			}
 			// Add clear section separator with emoji
@@ -36,8 +49,23 @@ func FormatForClaude(context string) string {
 			builder.WriteString(strings.TrimPrefix(trimmed, "# "))
 			builder.WriteString("\n")
 			inSection = true
-		} else if inSection {
-			builder.WriteString(line)
+			sawHeader = true
+		} else {
+			if !sawHeader {
+				// Buffer lines before the first header so they are not lost
+				preHeaderLines = append(preHeaderLines, line)
+			} else if inSection {
+				builder.WriteString(line)
+				builder.WriteString("\n")
+			}
+		}
+	}
+	
+	// If no headers were found at all, emit any collected lines as general context.
+	if !sawHeader && len(preHeaderLines) > 0 {
+		builder.WriteString("## 📚 GENERAL CONTEXT\n")
+		for _, preLine := range preHeaderLines {
+			builder.WriteString(preLine)
 			builder.WriteString("\n")
 		}
 	}

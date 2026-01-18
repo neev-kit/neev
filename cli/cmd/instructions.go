@@ -23,10 +23,17 @@ The instructions include:
 
 Run this command after adding new blueprints or updating your foundation.`,
 	Run: func(cmd *cobra.Command, args []string) {
-		cwd, _ := os.Getwd()
+		cwd, err := os.Getwd()
+		if err != nil {
+			errorStyle := lipgloss.NewStyle().
+				Bold(true).
+				Foreground(lipgloss.Color("1"))
+			fmt.Println(errorStyle.Render("❌ Failed to determine current working directory: " + err.Error()))
+			return
+		}
 
 		// Generate and save instructions
-		err := instructions.SaveCopilotInstructions(cwd)
+		err = instructions.SaveCopilotInstructions(cwd)
 		if err != nil {
 			errorStyle := lipgloss.NewStyle().
 				Bold(true).

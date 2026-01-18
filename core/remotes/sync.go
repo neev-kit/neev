@@ -6,6 +6,7 @@ import (
 	"os"
 	"path/filepath"
 	"strings"
+	"time"
 )
 
 // Sync synchronizes remote foundations to the local .neev/remotes directory
@@ -92,6 +93,14 @@ func syncRemote(rootDir, remotesDir string, remote Remote, result *SyncResult) e
 
 		// Copy file
 		destPath := filepath.Join(destDir, relPath)
+		
+		// Validate destPath is within destDir to prevent path traversal
+		cleanDest := filepath.Clean(destPath)
+		cleanDestDir := filepath.Clean(destDir)
+		if !strings.HasPrefix(cleanDest, cleanDestDir+string(os.PathSeparator)) && cleanDest != cleanDestDir {
+			return fmt.Errorf("invalid destination path: %s", destPath)
+		}
+		
 		if err := copyFile(path, destPath); err != nil {
 			return fmt.Errorf("failed to copy %s: %w", path, err)
 		}
@@ -142,6 +151,17 @@ func copyFile(src, dst string) error {
 
 // GetRemoteInfo returns information about a synced remote
 func GetRemoteInfo(rootDir, remoteName string) (*RemoteInfo, error) {
+	// Validate remoteName to prevent path traversal
+	if remoteName == "" {
+		return nil, fmt.Errorf("remote name cannot be empty")
+	}
+	// Ensure remoteName is a simple name without path separators or traversal sequences
+	if remoteName != filepath.Base(remoteName) ||
+		strings.Contains(remoteName, "..") ||
+		strings.ContainsAny(remoteName, `/\`) {
+		return nil, fmt.Errorf("invalid remote name '%s'", remoteName)
+	}
+	
 	remoteDir := filepath.Join(rootDir, ".neev", "remotes", remoteName)
 
 	if _, err := os.Stat(remoteDir); os.IsNotExist(err) {
@@ -155,19 +175,23 @@ func GetRemoteInfo(rootDir, remoteName string) (*RemoteInfo, error) {
 	}
 
 	// Count files and gather names
+	var lastModTime time.Time
 	err := filepath.Walk(remoteDir, func(path string, fileInfo os.FileInfo, err error) error {
 		if err != nil {
 			return err
 		}
 
 		if !fileInfo.IsDir() {
-			relPath, _ := filepath.Rel(remoteDir, path)
+			relPath, relErr := filepath.Rel(remoteDir, path)
+			if relErr != nil {
+				return relErr
+			}
 			info.Files = append(info.Files, relPath)
 			info.FileCount++
 
 			// Update last modified if this file is newer
-			if info.LastModified == "" || fileInfo.ModTime().String() > info.LastModified {
-				info.LastModified = fileInfo.ModTime().Format("2006-01-02 15:04:05")
+			if lastModTime.IsZero() || fileInfo.ModTime().After(lastModTime) {
+				lastModTime = fileInfo.ModTime()
 			}
 		}
 
@@ -176,6 +200,10 @@ func GetRemoteInfo(rootDir, remoteName string) (*RemoteInfo, error) {
 
 	if err != nil {
 		return nil, fmt.Errorf("failed to scan remote directory: %w", err)
+	}
+
+	if !lastModTime.IsZero() {
+		info.LastModified = lastModTime.Format("2006-01-02 15:04:05")
 	}
 
 	return info, nil

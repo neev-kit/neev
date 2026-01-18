@@ -23,7 +23,11 @@ var inspectCmd = &cobra.Command{
 	Short: "Inspect the foundation for drift",
 	Long:  "Check if the project structure matches the foundation specifications",
 	Run: func(cmd *cobra.Command, args []string) {
-		cwd, _ := os.Getwd()
+		cwd, err := os.Getwd()
+		if err != nil {
+			fmt.Printf("Error: could not determine current working directory: %v\n", err)
+			return
+		}
 
 		// Load config to get foundation path and ignore dirs
 		cfg, err := config.LoadConfig(cwd)
