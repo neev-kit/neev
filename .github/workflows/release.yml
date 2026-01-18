@@ -24,12 +24,14 @@ jobs:
 
       - name: Run tests
         run: |
-          cd cli && go test ./... && cd ../core && go test ./...
+          cd cli && go test ./... 
+          cd ../core && go test ./...
 
       - name: Run GoReleaser
         uses: goreleaser/goreleaser-action@v5
         with:
           version: latest
           args: release --clean
+          workdir: .
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

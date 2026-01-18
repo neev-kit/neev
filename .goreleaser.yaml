@@ -9,8 +9,10 @@ dist: dist
 
 before:
   hooks:
-    - go mod tidy
-    - go test ./...
+    - go mod tidy -C cli
+    - go mod tidy -C core
+    - go test -C cli ./...
+    - go test -C core ./...
 
 builds:
   - id: "neev"
