@@ -594,4 +594,15 @@ See [MAINTAINERS.md](MAINTAINERS.md) for core team and advisors.
 
 **Ready to build better software with AI?** 
 
-👉 [Get Started](#quick-start) | 📖 [Full Guide](USAGE.md) | 🏗️ [Architecture](ARCHITECTURE.md) | 💻 [Development](DEVELOPMENT.md)
+## 📚 Documentation
+
+- **🚀 [Getting Started](GETTING_STARTED.md)** — Complete beginner's guide
+- **📖 [Usage Guide](USAGE.md)** — Detailed command reference
+- **📋 [API Reference](API_REFERENCE.md)** — Complete command documentation
+- **🎓 [Tutorials](TUTORIALS.md)** — 8 step-by-step walkthroughs
+- **💡 [Best Practices](BEST_PRACTICES.md)** — Patterns and anti-patterns
+- **❓ [FAQ](FAQ.md)** — Common questions and troubleshooting
+- **🏗️ [Architecture](ARCHITECTURE.md)** — System design
+- **💻 [Development](DEVELOPMENT.md)** — Contributing guide
+
+👉 **New to Neev?** Start with [Getting Started](GETTING_STARTED.md)
