@@ -1,0 +1,38 @@
+name: Tests
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        go-version: ['1.23', '1.24', '1.25']
+    
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Go ${{ matrix.go-version }}
+        uses: actions/setup-go@v4
+        with:
+          go-version: ${{ matrix.go-version }}
+
+      - name: Run tests - CLI
+        run: cd cli && go test -v ./...
+
+      - name: Run tests - Core
+        run: cd core && go test -v ./...
+
+      - name: Run tests - All packages
+        run: cd core && go test -cover ./...
+
+      - name: Build
+        run: |
+          cd cli
+          go build -o neev main.go
+          ./neev --help
