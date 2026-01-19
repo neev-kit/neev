@@ -229,6 +229,37 @@ Generate GitHub Copilot instructions from your foundation and blueprints.
 neev instructions               # Creates .github/copilot-instructions.md
 ```
 
+### `neev openapi <blueprint>`
+
+Generate OpenAPI 3.1 specification from a blueprint's architecture.md.
+
+```bash
+neev openapi user-api           # Creates openapi.yaml in blueprint folder
+```
+
+**Features:**
+- Parses endpoint definitions from architecture.md
+- Generates valid OpenAPI 3.1 YAML
+- Automatically detects path parameters
+- Includes request/response schemas
+
+### `neev cucumber <blueprint> [--lang <language>]`
+
+Generate Cucumber/BDD test scaffolding from a blueprint's architecture.md.
+
+```bash
+neev cucumber user-api --lang go           # Generate with Go step definitions
+neev cucumber user-api --lang javascript  # Generate with JavaScript steps
+neev cucumber user-api --lang python      # Generate with Python steps
+neev cucumber user-api                     # Feature file only
+```
+
+**Features:**
+- Generates Gherkin feature files from API endpoints
+- Creates step definition scaffolds (Go, JavaScript, Python)
+- Includes test scenarios for all HTTP methods
+- Handles authentication and parameter setup
+
 ## Production Features
 
 Neev includes production-grade features for enterprise use:
@@ -417,6 +448,57 @@ neev draft "Database Schema"
 ```bash
 neev bridge > ONBOARDING.md
 ```
+
+### Example: API Specification & Testing
+
+**1. Create API blueprint:**
+```bash
+neev draft "user-api"
+```
+
+**2. Document endpoints in architecture.md:**
+```markdown
+# User API Architecture
+
+## Endpoints
+
+### GET /api/v1/users
+List all users with pagination.
+
+**Query Parameters:**
+- `page` (default: 1): Page number
+- `limit` (default: 20): Items per page
+
+### POST /api/v1/users
+Create a new user.
+
+**Request:**
+\`\`\`json
+{
+  "name": "John Doe",
+  "email": "john@example.com"
+}
+\`\`\`
+
+### GET /api/v1/users/:id
+Get user by ID.
+```
+
+**3. Generate OpenAPI spec:**
+```bash
+neev openapi user-api
+# Creates .neev/blueprints/user-api/openapi.yaml
+```
+
+**4. Generate BDD tests:**
+```bash
+neev cucumber user-api --lang go
+# Creates .neev/blueprints/user-api/tests/api.feature
+# Creates .neev/blueprints/user-api/tests/steps.go
+```
+
+**5. Implement tests and iterate:**
+Use the generated Cucumber tests as a starting point for your API testing suite.
 
 ## Use Cases
 

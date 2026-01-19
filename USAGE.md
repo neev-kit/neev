@@ -294,6 +294,172 @@ neev bridge --focus "Cache"  # Different from above
 
 ---
 
+### `neev openapi <blueprint>`
+
+Generate OpenAPI 3.1 specification from a blueprint's `architecture.md`.
+
+**Usage:**
+```bash
+neev openapi <blueprint>
+```
+
+**Arguments:**
+- `<blueprint>` - Name of the blueprint (same as used in `neev draft`)
+
+**Description:**
+
+Parses the `architecture.md` file from a blueprint and generates a valid OpenAPI 3.1 YAML specification. The parser extracts:
+- HTTP endpoints (GET, POST, PUT, DELETE, PATCH)
+- Path and query parameters
+- Request and response schemas
+- API descriptions
+
+**Example:**
+```bash
+# Generate OpenAPI spec for user-api blueprint
+neev openapi user-api
+
+# Output: .neev/blueprints/user-api/openapi.yaml
+```
+
+**Requirements:**
+
+Your `architecture.md` should follow this format:
+```markdown
+# API Architecture
+
+## Endpoints
+
+### GET /api/v1/users
+List all users.
+
+**Query Parameters:**
+- `page` (default: 1): Page number
+- `limit` (default: 20): Items per page
+
+### POST /api/v1/users
+Create a new user.
+
+**Request:**
+\`\`\`json
+{
+  "name": "John Doe",
+  "email": "john@example.com"
+}
+\`\`\`
+
+**Response (201):**
+\`\`\`json
+{
+  "id": "123",
+  "name": "John Doe"
+}
+\`\`\`
+```
+
+**Output:**
+
+The generated `openapi.yaml` includes:
+- OpenAPI 3.1.0 specification
+- All parsed endpoints with operations
+- Parameter definitions
+- Request/response schemas
+- Standard HTTP status codes
+
+**Errors:**
+- `Blueprint not found: ...` - Blueprint doesn't exist
+- `architecture.md not found in blueprint: ...` - Missing architecture file
+- `Failed to generate OpenAPI spec: no API endpoints found` - No endpoints in architecture.md
+
+---
+
+### `neev cucumber <blueprint> [--lang <language>]`
+
+Generate Cucumber/BDD test scaffolding from a blueprint's `architecture.md`.
+
+**Usage:**
+```bash
+neev cucumber <blueprint> [--lang <language>]
+```
+
+**Arguments:**
+- `<blueprint>` - Name of the blueprint (same as used in `neev draft`)
+
+**Flags:**
+- `--lang, -l` - Language for step definitions: `go`, `javascript`, or `python` (optional)
+
+**Description:**
+
+Generates Cucumber/Gherkin feature files and step definition scaffolds from API endpoints defined in `architecture.md`. Creates BDD test scenarios for each endpoint with appropriate Given/When/Then steps.
+
+**Examples:**
+```bash
+# Generate feature file only
+neev cucumber user-api
+
+# Generate with Go step definitions
+neev cucumber user-api --lang go
+
+# Generate with JavaScript step definitions
+neev cucumber user-api --lang javascript
+
+# Generate with Python step definitions
+neev cucumber user-api --lang python
+```
+
+**Output Structure:**
+```
+.neev/blueprints/<blueprint>/tests/
+├── api.feature      # Gherkin feature file
+└── steps.{go|js|py} # Step definitions (if --lang specified)
+```
+
+**Generated Feature File:**
+
+The `api.feature` contains scenarios like:
+```gherkin
+Feature: User Api API
+  As an API consumer
+  I want to interact with user-api endpoints
+  So that I can perform operations on the system
+
+  Scenario: GET /api/v1/users
+    Given the API is available
+    When I GET to "/api/v1/users"
+    And I include query parameter "page" with value "<value>"
+    Then the response status should be 200
+    And the response should contain valid data
+
+  Scenario: POST /api/v1/users
+    Given the API is available
+    And I am authenticated
+    When I POST to "/api/v1/users"
+    And I send the following JSON payload:
+      """
+      {
+        "name": "John Doe",
+        "email": "john@example.com"
+      }
+      """
+    Then the response status should be 201
+    And the response should contain the created resource
+```
+
+**Step Definitions:**
+
+Generated step definition files include:
+- Test context structure
+- Skeleton methods for each step
+- TODO comments for implementation
+- Language-specific patterns
+
+**Errors:**
+- `Blueprint not found: ...` - Blueprint doesn't exist
+- `architecture.md not found in blueprint: ...` - Missing architecture file
+- `unsupported language: ...` - Invalid --lang value
+
+---
+
 ## Examples
 
 ### Example 1: E-Commerce Project Setup
