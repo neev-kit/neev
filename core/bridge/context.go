@@ -5,6 +5,8 @@ import (
 	"os"
 	"path/filepath"
 	"strings"
+
+	"github.com/neev-kit/neev/core/foundation"
 )
 
 // BuildContext aggregates context from foundation and blueprints.
@@ -13,13 +15,13 @@ func BuildContext(focus string) (string, error) {
 	contextBuilder.WriteString("# Project Foundation\n")
 
 	// Read foundation files
-	foundationPath := ".neev/foundation"
+	foundationPath := filepath.Join(foundation.RootDir, foundation.FoundationDir)
 	if err := readFilesInDir(foundationPath, &contextBuilder, focus); err != nil {
 		return "", err
 	}
 
 	// Read blueprint files
-	blueprintsPath := ".neev/blueprints"
+	blueprintsPath := filepath.Join(foundation.RootDir, foundation.BlueprintsDir)
 	files, err := os.ReadDir(blueprintsPath)
 	if err != nil {
 		return "", fmt.Errorf("failed to read blueprints directory: %w", err)
@@ -39,8 +41,8 @@ func BuildContext(focus string) (string, error) {
 
 // BuildRemoteContext aggregates context from synced remote foundations
 func BuildRemoteContext() (string, error) {
-	remotesPath := ".neev/remotes"
-	
+	remotesPath := filepath.Join(foundation.RootDir, "remotes")
+
 	// Check if remotes directory exists
 	if _, err := os.Stat(remotesPath); os.IsNotExist(err) {
 		return "", nil // No remotes synced

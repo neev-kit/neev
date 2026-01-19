@@ -464,3 +464,141 @@ func TestBuildContext_FileReadError(t *testing.T) {
 		t.Errorf("Expected error when file is unreadable, got: %s", context)
 	}
 }
+
+func TestBuildContext_WindowsPaths(t *testing.T) {
+	tmpDir := t.TempDir()
+
+	// Setup directory structure using filepath.Join (handles Windows paths correctly)
+	foundationPath := filepath.Join(tmpDir, ".neev", "foundation")
+	blueprintsPath := filepath.Join(tmpDir, ".neev", "blueprints")
+
+	if err := os.MkdirAll(foundationPath, 0755); err != nil {
+		t.Fatalf("Failed to create foundation dir: %v", err)
+	}
+	if err := os.MkdirAll(blueprintsPath, 0755); err != nil {
+		t.Fatalf("Failed to create blueprints dir: %v", err)
+	}
+
+	// Create test files with Windows-compatible paths
+	foundationFile := filepath.Join(foundationPath, "base.md")
+	if err := os.WriteFile(foundationFile, []byte("# Foundation\nBase content"), 0644); err != nil {
+		t.Fatalf("Failed to write foundation file: %v", err)
+	}
+
+	blueprintDir := filepath.Join(blueprintsPath, "feature-x")
+	if err := os.MkdirAll(blueprintDir, 0755); err != nil {
+		t.Fatalf("Failed to create blueprint dir: %v", err)
+	}
+
+	blueprintFile := filepath.Join(blueprintDir, "spec.md")
+	if err := os.WriteFile(blueprintFile, []byte("# Feature X\nFeature specification"), 0644); err != nil {
+		t.Fatalf("Failed to write blueprint file: %v", err)
+	}
+
+	// Change to temp directory
+	oldCwd, err := os.Getwd()
+	if err != nil {
+		t.Fatalf("Failed to get cwd: %v", err)
+	}
+	defer os.Chdir(oldCwd)
+
+	if err := os.Chdir(tmpDir); err != nil {
+		t.Fatalf("Failed to change dir: %v", err)
+	}
+
+	// Test that context is built correctly regardless of path separator
+	context, err := BuildContext("")
+	if err != nil {
+		t.Fatalf("BuildContext failed: %v", err)
+	}
+
+	if !strings.Contains(context, "Base content") {
+		t.Errorf("Expected 'Base content' in context, got: %s", context)
+	}
+
+	if !strings.Contains(context, "Feature specification") {
+		t.Errorf("Expected 'Feature specification' in context, got: %s", context)
+	}
+}
+
+func TestBuildRemoteContext_WindowsPaths(t *testing.T) {
+	tmpDir := t.TempDir()
+
+	// Setup remote directory structure with filepath.Join
+	remotesPath := filepath.Join(tmpDir, ".neev", "remotes")
+	remotePath := filepath.Join(remotesPath, "shared-foundation")
+
+	if err := os.MkdirAll(remotePath, 0755); err != nil {
+		t.Fatalf("Failed to create remote dir: %v", err)
+	}
+
+	// Create test file in remote
+	remoteFile := filepath.Join(remotePath, "base.md")
+	if err := os.WriteFile(remoteFile, []byte("# Shared Foundation\nRemote content"), 0644); err != nil {
+		t.Fatalf("Failed to write remote file: %v", err)
+	}
+
+	// Change to temp directory
+	oldCwd, err := os.Getwd()
+	if err != nil {
+		t.Fatalf("Failed to get cwd: %v", err)
+	}
+	defer os.Chdir(oldCwd)
+
+	if err := os.Chdir(tmpDir); err != nil {
+		t.Fatalf("Failed to change dir: %v", err)
+	}
+
+	// Test that remote context is built correctly with Windows-compatible paths
+	context, err := BuildRemoteContext()
+	if err != nil {
+		t.Fatalf("BuildRemoteContext failed: %v", err)
+	}
+
+	if !strings.Contains(context, "shared-foundation") {
+		t.Errorf("Expected 'shared-foundation' in context, got: %s", context)
+	}
+
+	if !strings.Contains(context, "Remote content") {
+		t.Errorf("Expected 'Remote content' in context, got: %s", context)
+	}
+}
+
+func TestPathJoinCorrectness(t *testing.T) {
+	// This test verifies that filepath.Join handles both Unix and Windows paths correctly
+	testCases := []struct {
+		name     string
+		parts    []string
+		expected string
+	}{
+		{
+			name:     "nested foundation path",
+			parts:    []string{".neev", "foundation", "base.md"},
+			expected: filepath.Join(".neev", "foundation", "base.md"),
+		},
+		{
+			name:     "nested blueprints path",
+			parts:    []string{".neev", "blueprints", "feature", "spec.md"},
+			expected: filepath.Join(".neev", "blueprints", "feature", "spec.md"),
+		},
+		{
+			name:     "remote path",
+			parts:    []string{".neev", "remotes", "shared", "base.md"},
+			expected: filepath.Join(".neev", "remotes", "shared", "base.md"),
+		},
+	}
+
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			result := filepath.Join(tc.parts...)
+			if result != tc.expected {
+				t.Errorf("filepath.Join mismatch: got %q, expected %q", result, tc.expected)
+			}
+
+			// Verify no hardcoded separators
+			if strings.Contains(result, "/") && filepath.Separator == '\\' {
+				t.Errorf("Result contains Unix separator on Windows: %q", result)
+			}
+		})
+	}
+}

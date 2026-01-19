@@ -29,13 +29,28 @@ Neev is a spec-driven development framework that ensures **what you intend to bu
 ### 1️⃣ Install
 
 ```bash
-# macOS
+# macOS (Intel)
+curl -L https://github.com/neev-kit/neev/releases/latest/download/neev_darwin_amd64.tar.gz | tar xz
+sudo mv neev /usr/local/bin/
+
+# macOS (Apple Silicon)
 curl -L https://github.com/neev-kit/neev/releases/latest/download/neev_darwin_arm64.tar.gz | tar xz
 sudo mv neev /usr/local/bin/
 
-# Linux
+# Linux (x86_64)
 curl -L https://github.com/neev-kit/neev/releases/latest/download/neev_linux_amd64.tar.gz | tar xz
 sudo mv neev /usr/local/bin/
+
+# Windows (PowerShell)
+powershell -Command "
+  \$LatestRelease = (curl -s https://api.github.com/repos/neev-kit/neev/releases/latest).assets | Where-Object { \$_.name -like '*windows_amd64*' }
+  curl -Lo \$env:TEMP\neev.zip \$LatestRelease.browser_download_url
+  Expand-Archive \$env:TEMP\neev.zip -DestinationPath \$env:USERPROFILE\AppData\Local\Microsoft\WindowsApps
+  Remove-Item \$env:TEMP\neev.zip
+"
+
+# Windows (Winget)
+winget install neev-kit.neev
 
 # Or build from source
 git clone https://github.com/neev-kit/neev.git && cd neev
