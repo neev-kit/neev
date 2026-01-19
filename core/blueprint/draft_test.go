@@ -424,3 +424,227 @@ func TestDraft_DirectoryHierarchy(t *testing.T) {
 		t.Error("Blueprint path should be a directory")
 	}
 }
+
+func TestDraft_CreatesFoundationOnFirstDraft(t *testing.T) {
+	tmpDir := t.TempDir()
+
+	// Setup .neev/blueprints directory
+	blueprintsPath := filepath.Join(tmpDir, ".neev", "blueprints")
+	if err := os.MkdirAll(blueprintsPath, 0755); err != nil {
+		t.Fatalf("Failed to create blueprints dir: %v", err)
+	}
+
+	// Change to temp directory
+	oldCwd, err := os.Getwd()
+	if err != nil {
+		t.Fatalf("Failed to get cwd: %v", err)
+	}
+	defer os.Chdir(oldCwd)
+
+	if err := os.Chdir(tmpDir); err != nil {
+		t.Fatalf("Failed to change dir: %v", err)
+	}
+
+	err = Draft("First Blueprint")
+	if err != nil {
+		t.Errorf("Draft failed: %v", err)
+	}
+
+	// Verify foundation directory was created
+	foundationPath := filepath.Join(".neev", "foundation")
+	if _, err := os.Stat(foundationPath); os.IsNotExist(err) {
+		t.Errorf("Expected foundation directory at %s", foundationPath)
+	}
+}
+
+func TestDraft_FoundationHasStackFile(t *testing.T) {
+	tmpDir := t.TempDir()
+
+	// Setup .neev/blueprints directory
+	blueprintsPath := filepath.Join(tmpDir, ".neev", "blueprints")
+	if err := os.MkdirAll(blueprintsPath, 0755); err != nil {
+		t.Fatalf("Failed to create blueprints dir: %v", err)
+	}
+
+	// Change to temp directory
+	oldCwd, err := os.Getwd()
+	if err != nil {
+		t.Fatalf("Failed to get cwd: %v", err)
+	}
+	defer os.Chdir(oldCwd)
+
+	if err := os.Chdir(tmpDir); err != nil {
+		t.Fatalf("Failed to change dir: %v", err)
+	}
+
+	err = Draft("Feature")
+	if err != nil {
+		t.Errorf("Draft failed: %v", err)
+	}
+
+	// Verify stack.md exists
+	stackFile := filepath.Join(".neev", "foundation", "stack.md")
+	if _, err := os.Stat(stackFile); os.IsNotExist(err) {
+		t.Errorf("Expected stack.md at %s", stackFile)
+	}
+}
+
+func TestDraft_FoundationHasPrinciplesFile(t *testing.T) {
+	tmpDir := t.TempDir()
+
+	// Setup .neev/blueprints directory
+	blueprintsPath := filepath.Join(tmpDir, ".neev", "blueprints")
+	if err := os.MkdirAll(blueprintsPath, 0755); err != nil {
+		t.Fatalf("Failed to create blueprints dir: %v", err)
+	}
+
+	// Change to temp directory
+	oldCwd, err := os.Getwd()
+	if err != nil {
+		t.Fatalf("Failed to get cwd: %v", err)
+	}
+	defer os.Chdir(oldCwd)
+
+	if err := os.Chdir(tmpDir); err != nil {
+		t.Fatalf("Failed to change dir: %v", err)
+	}
+
+	err = Draft("Feature")
+	if err != nil {
+		t.Errorf("Draft failed: %v", err)
+	}
+
+	// Verify principles.md exists
+	principlesFile := filepath.Join(".neev", "foundation", "principles.md")
+	if _, err := os.Stat(principlesFile); os.IsNotExist(err) {
+		t.Errorf("Expected principles.md at %s", principlesFile)
+	}
+}
+
+func TestDraft_FoundationHasPatternsFile(t *testing.T) {
+	tmpDir := t.TempDir()
+
+	// Setup .neev/blueprints directory
+	blueprintsPath := filepath.Join(tmpDir, ".neev", "blueprints")
+	if err := os.MkdirAll(blueprintsPath, 0755); err != nil {
+		t.Fatalf("Failed to create blueprints dir: %v", err)
+	}
+
+	// Change to temp directory
+	oldCwd, err := os.Getwd()
+	if err != nil {
+		t.Fatalf("Failed to get cwd: %v", err)
+	}
+	defer os.Chdir(oldCwd)
+
+	if err := os.Chdir(tmpDir); err != nil {
+		t.Fatalf("Failed to change dir: %v", err)
+	}
+
+	err = Draft("Feature")
+	if err != nil {
+		t.Errorf("Draft failed: %v", err)
+	}
+
+	// Verify patterns.md exists
+	patternsFile := filepath.Join(".neev", "foundation", "patterns.md")
+	if _, err := os.Stat(patternsFile); os.IsNotExist(err) {
+		t.Errorf("Expected patterns.md at %s", patternsFile)
+	}
+}
+
+func TestDraft_FoundationFilesHaveContent(t *testing.T) {
+	tmpDir := t.TempDir()
+
+	// Setup .neev/blueprints directory
+	blueprintsPath := filepath.Join(tmpDir, ".neev", "blueprints")
+	if err := os.MkdirAll(blueprintsPath, 0755); err != nil {
+		t.Fatalf("Failed to create blueprints dir: %v", err)
+	}
+
+	// Change to temp directory
+	oldCwd, err := os.Getwd()
+	if err != nil {
+		t.Fatalf("Failed to get cwd: %v", err)
+	}
+	defer os.Chdir(oldCwd)
+
+	if err := os.Chdir(tmpDir); err != nil {
+		t.Fatalf("Failed to change dir: %v", err)
+	}
+
+	err = Draft("Feature")
+	if err != nil {
+		t.Errorf("Draft failed: %v", err)
+	}
+
+	// Verify all foundation files have content
+	foundationFiles := []string{
+		"stack.md",
+		"principles.md",
+		"patterns.md",
+	}
+
+	for _, filename := range foundationFiles {
+		filePath := filepath.Join(".neev", "foundation", filename)
+		content, err := os.ReadFile(filePath)
+		if err != nil {
+			t.Errorf("Failed to read %s: %v", filename, err)
+			continue
+		}
+
+		if len(content) == 0 {
+			t.Errorf("%s should not be empty", filename)
+		}
+	}
+}
+
+func TestDraft_FoundationNotOverwrittenOnSecondDraft(t *testing.T) {
+	tmpDir := t.TempDir()
+
+	// Setup .neev/blueprints directory
+	blueprintsPath := filepath.Join(tmpDir, ".neev", "blueprints")
+	if err := os.MkdirAll(blueprintsPath, 0755); err != nil {
+		t.Fatalf("Failed to create blueprints dir: %v", err)
+	}
+
+	// Change to temp directory
+	oldCwd, err := os.Getwd()
+	if err != nil {
+		t.Fatalf("Failed to get cwd: %v", err)
+	}
+	defer os.Chdir(oldCwd)
+
+	if err := os.Chdir(tmpDir); err != nil {
+		t.Fatalf("Failed to change dir: %v", err)
+	}
+
+	// Create first draft
+	err = Draft("Feature One")
+	if err != nil {
+		t.Errorf("First Draft failed: %v", err)
+	}
+
+	// Read original content
+	stackFile := filepath.Join(".neev", "foundation", "stack.md")
+	originalContent, err := os.ReadFile(stackFile)
+	if err != nil {
+		t.Errorf("Failed to read stack.md: %v", err)
+	}
+
+	// Create second draft
+	err = Draft("Feature Two")
+	if err != nil {
+		t.Errorf("Second Draft failed: %v", err)
+	}
+
+	// Verify foundation files still exist and weren't overwritten
+	newContent, err := os.ReadFile(stackFile)
+	if err != nil {
+		t.Errorf("Failed to read stack.md after second draft: %v", err)
+	}
+
+	if string(originalContent) != string(newContent) {
+		t.Error("Foundation files should not be overwritten on subsequent drafts")
+	}
+}
