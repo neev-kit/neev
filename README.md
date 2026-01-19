@@ -1,38 +1,35 @@
-# 🏗️ Neev - AI-Ready Blueprint Framework
+# 🏗️ Neev - Spec-Driven Development for Teams
 
 [![Go Version](https://img.shields.io/badge/Go-1.23+-00ADD8?style=flat-square&logo=go)](https://golang.org/dl/)
 [![License](https://img.shields.io/badge/License-MIT-blue.svg?style=flat-square)](LICENSE)
 [![Tests](https://img.shields.io/github/actions/workflow/status/neev-kit/neev/tests.yml?branch=main&style=flat-square&label=Tests)](https://github.com/neev-kit/neev/actions)
 [![Release](https://img.shields.io/github/v/release/neev-kit/neev?style=flat-square&label=Release)](https://github.com/neev-kit/neev/releases)
 
-**Build better software by bridging project intent with AI coding assistants.**
+**Document your architecture before you build it. Ship aligned code on first implementation.**
 
-Neev is a lightweight CLI framework that helps you capture project blueprints, aggregate context, and seamlessly hand off to AI agents. No dependencies on external APIs or complex setup — just structured markdown files versioned in your repository.
+Neev is a spec-driven development framework that ensures **what you intend to build matches what you actually build**. It works by:
 
-## Why Neev?
+1. **Write blueprints** (markdown specs of features/components)
+2. **Aggregate context** (run `neev bridge` to get full project context)
+3. **Build with AI** (pass context to Claude, Cursor, Copilot for implementation)
+4. **Verify alignment** (run `neev inspect` to catch drift from specs)
 
-Traditional AI coding assistants work best with clear project context. Neev solves this by:
+**No external APIs. No dependencies. All files versioned in your repository.**
 
-- **🎯 Explicit Intent**: Capture what you want to build before implementation
-- **📚 Organized Context**: Structure project knowledge in `.neev/` (version controlled)
-- **🤖 AI-Ready**: Generate context aggregations perfect for LLM consumption
-- **🔧 Zero Friction**: Works with any AI tool — no API keys or configuration
-- **⚡ Fast Setup**: Initialize and start drafting in seconds
+## The Problem Neev Solves
 
-## Quick Start
+❌ **Without specs**: Features get built differently than intended → rewrites → shipping late
 
-### 1. Installation
+✅ **With Neev**: Specs are clear → implementation matches intent → ship on first attempt
 
-**Option A: Download Pre-built Binary (Recommended)**
+**Real benefit**: Teams ship aligned code faster because **thinking comes before typing**.
 
-Download the latest stable release from [GitHub Releases](https://github.com/neev-kit/neev/releases):
+## 5-Minute Setup
+
+### 1️⃣ Install
 
 ```bash
-# macOS (Intel)
-curl -L https://github.com/neev-kit/neev/releases/latest/download/neev_darwin_amd64.tar.gz | tar xz
-sudo mv neev /usr/local/bin/
-
-# macOS (Apple Silicon)
+# macOS
 curl -L https://github.com/neev-kit/neev/releases/latest/download/neev_darwin_arm64.tar.gz | tar xz
 sudo mv neev /usr/local/bin/
 
@@ -40,32 +37,12 @@ sudo mv neev /usr/local/bin/
 curl -L https://github.com/neev-kit/neev/releases/latest/download/neev_linux_amd64.tar.gz | tar xz
 sudo mv neev /usr/local/bin/
 
-# Windows (PowerShell)
-# Download from https://github.com/neev-kit/neev/releases and extract
+# Or build from source
+git clone https://github.com/neev-kit/neev.git && cd neev
+go build -o neev ./cli && sudo mv neev /usr/local/bin/
 ```
 
-**Option B: Build from Source**
-
-```bash
-# Clone and build
-git clone https://github.com/neev-kit/neev.git
-cd neev
-go mod download
-go build -o neev ./cli
-sudo mv neev /usr/local/bin/
-
-# Or install directly
-go install github.com/neev-kit/neev/cli@latest
-```
-
-**Verify Installation**
-
-```bash
-neev --version
-neev --help
-```
-
-### 2. Initialize Your Project
+### 2️⃣ Initialize
 
 ```bash
 cd /path/to/your/project
@@ -75,188 +52,105 @@ neev init
 Creates:
 ```
 .neev/
-├── neev.yaml              # Project configuration
-├── blueprints/            # Your blueprint collection
-└── foundation/            # Project foundations & principles
+├── neev.yaml                    # Config
+├── blueprints/                  # Features you'll build
+└── foundation/
+    ├── stack.md                 # Tech stack
+    ├── principles.md            # Design principles
+    └── patterns.md              # Architecture patterns
 ```
 
-### 3. Create Your First Blueprint
+### 3️⃣ Create Your First Blueprint
 
 ```bash
-neev draft "user-authentication"
-neev draft "Database Schema"
+neev draft "User Authentication"
 ```
 
-### 4. Aggregate Context for AI
+Generates:
+```
+.neev/blueprints/user-authentication/
+├── intent.md         # Why we're building this
+└── architecture.md   # How it works
+```
+
+### 4️⃣ Get AI-Ready Context
 
 ```bash
-# Get full project context
 neev bridge
-
-# Filter by keyword
-neev bridge --focus "authentication"
-
-# Save to file
-neev bridge > context.md
+# Copy output → Paste into Claude/Copilot/Cursor
 ```
 
-## Core Concepts
+That's it. You're ready to build aligned code.
 
-### Blueprint
-A markdown-based specification of a feature or component you want to build. Each blueprint is self-contained and can reference others.
-
-**Example**:
-```
-.neev/blueprints/user-auth/
-├── intent.md          # What and why
-├── architecture.md    # How it works
-├── api-spec.md        # API contracts
-└── security.md        # Security considerations
-```
-
-### Foundation
-Project-wide principles, conventions, and architectural decisions. Shared across all blueprints.
-
-**Example**:
-```
-.neev/foundation/
-├── principles.md      # Project values
-├── stack.md           # Technology choices
-└── conventions.md     # Coding standards
-```
-
-### Context
-Aggregated, searchable project information ready for AI consumption. Generated via `neev bridge`.
+---
 
 ## How It Works
 
+**The Neev Workflow:**
+
 ```
-┌─────────────────────────────┐
-│  Write Blueprints & Docs    │
-│  (Markdown in .neev/)       │
-└────────────┬────────────────┘
-             │
-             ▼
-┌─────────────────────────────┐
-│  Run: neev bridge           │
-│  (Aggregate & optionally    │
-│   filter by keywords)       │
-└────────────┬────────────────┘
-             │
-             ▼
-┌─────────────────────────────┐
-│  Get Context Output         │
-│  (Ready for AI agents)      │
-└────────────┬────────────────┘
-             │
-             ▼
-┌─────────────────────────────┐
-│  Share with AI Coding       │
-│  Assistant (Claude, Cursor, │
-│  GitHub Copilot, etc.)      │
-└─────────────────────────────┘
+PLAN              BUILD              VERIFY
+────────          ─────              ──────
+Write blueprints  Copy context to    neev inspect catches
+in .neev/         AI coding tool     any drift from specs
+       ↓                  ↓                ↓
+  Specs clear     Implementation   Code matches
+                  with intent       architecture
 ```
 
-## Commands
+**Key insight:** Specs become the source of truth. Code should match specs, not the other way around.
 
-Neev provides 14 powerful commands for blueprint management and AI integration. Here's a quick overview:
+## All Commands
 
-| Command | Purpose |
-|---------|---------|
-| `neev init` | Initialize Neev foundation in your project |
-| `neev draft <title>` | Create a new blueprint |
-| `neev bridge [flags]` | Aggregate project context for AI agents |
-| `neev inspect [flags]` | Verify project structure matches specs |
-| `neev openapi <blueprint>` | Generate OpenAPI specification |
-| `neev cucumber <blueprint>` | Generate BDD test scaffolding |
-| `neev handoff <role>` | Create AI handoff prompts |
-| `neev lay <blueprint>` | Archive blueprint to foundation |
-| `neev instructions` | Update GitHub Copilot instructions |
-| `neev slash-commands` | Manage AI tool slash commands |
-| `neev migrate [flags]` | Convert from OpenSpec/Spec-Kit to Neev |
-| `neev sync-remotes [flags]` | Sync remote foundations |
+| Command | Purpose | Example |
+|---------|---------|---------|
+| `neev init` | Set up .neev/ foundation | `neev init` |
+| `neev draft <title>` | Create a blueprint | `neev draft "User API"` |
+| `neev bridge [flags]` | Get AI-ready context | `neev bridge` or `neev bridge --focus auth` |
+| `neev inspect` | Check code matches specs | `neev inspect` or `neev inspect --strict` (for CI) |
+| `neev openapi <bp>` | Generate OpenAPI spec | `neev openapi user-api` |
+| `neev cucumber <bp>` | Generate BDD tests | `neev cucumber user-api --lang go` |
+| `neev handoff <role>` | Create handoff prompts | `neev handoff backend` |
+| `neev lay <bp>` | Archive completed blueprint | `neev lay user-api` |
+| `neev instructions` | Update Copilot instructions | `neev instructions` |
+| `neev slash-commands` | Manage slash commands | `neev slash-commands --list` |
+| `neev migrate` | Convert from OpenSpec/Spec-Kit | `neev migrate --source openspec` |
+| `neev sync-remotes` | Sync remote foundations | `neev sync-remotes` |
 
-### Quick Examples
+**Full reference:** See [COMMAND_CATALOG.md](COMMAND_CATALOG.md)
 
-```bash
-# Initialize project
-neev init
+## Key Features
 
-# Create a blueprint
-neev draft "user-authentication"
+**🎯 Specs First**
+- Write blueprints before code → implementation matches intent
+- `neev inspect` catches drift early (use `--strict` in CI/CD)
 
-# Get AI context
-neev bridge
+**🤖 AI-Native**
+- `neev bridge` outputs context optimized for Claude, Copilot, Cursor
+- Slash commands for quick access in GitHub Copilot Chat
+- No API keys, no cloud login — works offline
 
-# Generate API docs
-neev openapi user-authentication
+**🔍 Alignment**
+- Detect when code diverges from specs
+- Module-level validation with `.module.yaml` descriptors
+- JSON output for CI/CD pipelines
 
-# Generate BDD tests
-neev cucumber user-authentication --lang go
+**🌐 Polyrepo Ready**
+- Reference specs from other repositories
+- Share architecture across teams
+- Fine-grained public/private control
 
-# Verify specs
-neev inspect
-```
+**📚 Documentation**
+- Generate OpenAPI specs from architecture blueprints
+- Create BDD test scaffolding automatically
+- Onboarding docs are always in sync with reality
 
-### Complete Command Reference
+**🚀 Zero Setup**
+- Local-first, no external dependencies
+- All files versioned in `.neev/` (commit to git)
+- Works with any project type (Go, Node, Python, etc.)
 
-📚 **For comprehensive documentation of all commands with examples and flags, see [COMMAND_CATALOG.md](COMMAND_CATALOG.md)**
-
-This includes:
-- Detailed syntax and flags for each command
-- Real-world usage examples
-- Output formats and structure
-- Common workflows
-- When to use each command
-
-## Production Features
-
-Neev includes production-grade features for enterprise use:
-
-### 🔍 Advanced Drift Detection
-- **Structured Warnings**: Categorized drift detection (MISSING_MODULE, EXTRA_CODE, etc.)
-- **Module Descriptors**: Define expected files and patterns in `.module.yaml` files
-- **CI/CD Integration**: JSON output for automated checks
-
-```bash
-neev inspect --json             # Get structured drift report
-neev inspect --use-descriptors  # Validate against module descriptors
-```
-
-### 🌐 Polyrepo Support
-- **Remote Foundations**: Reference foundations from other repositories
-- **Cross-Repo Context**: Include external specs in bridge context
-- **Public/Private Control**: Filter what gets shared with `public_only`
-
-```yaml
-# neev.yaml
-remotes:
-  - name: api
-    path: "../backend/.neev/foundation"
-    public_only: true
-```
-
-```bash
-neev sync-remotes               # Sync all remotes
-neev bridge --with-remotes      # Include remotes in context
-```
-
-### 🤖 AI Assistant Integration
-- **GitHub Copilot**: Auto-generate instructions from your specs
-- **Claude Optimization**: Special formatting for Claude AI
-- **Context Management**: Smart aggregation for better AI suggestions
-
-```bash
-neev instructions               # Generate Copilot instructions
-neev bridge --claude            # Claude-optimized output
-neev bridge --claude --with-remotes  # Full context for Claude
-```
-
-See [PRODUCTION_ENHANCEMENTS.md](PRODUCTION_ENHANCEMENTS.md) for detailed documentation.
-
-## Configuration
-
-The `neev.yaml` file controls Neev behavior:
+## Configuration (neev.yaml)
 
 ```yaml
 project_name: My Project
@@ -264,205 +158,85 @@ foundation_path: .neev
 ignore_dirs:
   - node_modules
   - .git
-  - __pycache__
   - vendor
+
+# For polyrepo support
+remotes:
+  - name: shared-lib
+    path: "../shared/.neev/foundation"
+    public_only: true
 ```
 
-**Options:**
-- `project_name` — Display name for your project
-- `foundation_path` — Where `.neev/` directory lives (default: `.neev`)
-- `ignore_dirs` — Directories to skip during inspection
+See [CONTRIBUTING.md](CONTRIBUTING.md) for development setup.
 
-## Project Structure (Neev Repository)
+## Real-World Example: Building a User API
 
-```
-neev/
-├── cli/                     # CLI commands
-│   └── cmd/
-│       ├── root.go          # Root command (logger init)
-│       ├── init.go          # Initialize foundation
-│       ├── draft.go         # Create blueprints
-│       ├── bridge.go        # Aggregate context
-│       └── *_test.go        # Command tests
-│
-├── core/                    # Business logic
-│   ├── foundation/          # Init & inspect projects
-│   ├── blueprint/           # Blueprint management
-│   ├── bridge/              # Context aggregation
-│   ├── config/              # Configuration loading
-│   ├── errors/              # Custom error types
-│   └── logger/              # Structured logging
-│
-├── .github/workflows/       # CI/CD
-│   ├── tests.yml            # Run tests
-│   └── release.yml          # Build & release
-│
-└── Documentation
-    ├── README.md            # This file
-    ├── CONTRIBUTING.md      # Development guidelines
-    ├── DEVELOPMENT.md       # Setup & debugging
-    ├── ARCHITECTURE.md      # System design
-    └── USAGE.md             # Detailed usage guide
-```
-
-## Getting Started
-
-### Step 1: Install Neev
-
+**1. Create blueprint:**
 ```bash
-# Build from source
-git clone https://github.com/neev-kit/neev.git
-cd neev
-go build -o neev ./cli
-
-# Or use go install
-go install github.com/neev-kit/neev/cli@latest
+neev draft "User API"
 ```
 
-### Step 2: Initialize Your Project
+**2. Document in `.neev/blueprints/user-api/architecture.md`:**
+```markdown
+## User API Architecture
 
-```bash
-cd /path/to/your/project
-neev init
+### Endpoints
+
+#### GET /api/users
+List all users (paginated)
+- Query: page, limit
+- Response: { id, name, email, created_at }
+
+#### POST /api/users
+Create user
+- Body: { name, email, password }
+- Response: { id, name, email }
+
+#### GET /api/users/:id
+Get user by ID
+
+#### PUT /api/users/:id
+Update user
 ```
 
-### Step 3: Write Blueprints
-
+**3. Generate documentation:**
 ```bash
-# Create blueprints for features you want to build
-neev draft "User Authentication"
-neev draft "Database Layer"
-neev draft "API Gateway"
+# Generate OpenAPI spec
+neev openapi user-api
 
-# Edit the generated files with details
-# .neev/blueprints/user-authentication/intent.md
-# .neev/blueprints/user-authentication/architecture.md
+# Generate BDD tests
+neev cucumber user-api --lang go
 ```
 
-### Step 4: Use with AI Assistants
-
+**4. Build with AI:**
 ```bash
-# Generate context
+# Get context for the entire project
 neev bridge > context.md
 
-# Copy to Claude, Cursor, GitHub Copilot, etc.
-# Or pipe directly to your AI tool
-neev bridge | pbcopy  # macOS
-neev bridge | xclip   # Linux
+# Paste context + architecture into Cursor/Claude:
+# "Build this user API according to the context above"
 ```
 
-## Examples
-
-### Example: Building a Payment System
-
-**1. Create blueprints:**
+**5. Verify alignment:**
 ```bash
-neev draft "Payment Processing"
-neev draft "Webhook Management"
-neev draft "Error Handling"
+# After implementing, check code matches specs
+neev inspect
 ```
 
-**2. Add foundation:**
-```
-.neev/foundation/
-├── stack.md         # "We use Go, PostgreSQL, Redis"
-├── principles.md    # "Security first, simplicity second"
-└── patterns.md      # "Repository pattern, dependency injection"
-```
-
-**3. Aggregate context:**
-```bash
-neev bridge --focus payment
-```
-
-**4. Share with AI:**
-Paste the output into your AI coding assistant with your implementation request.
-
-### Example: Team Onboarding
-
-**1. Document architecture:**
-```bash
-neev draft "System Overview"
-neev draft "Authentication Flow"
-neev draft "Database Schema"
-```
-
-**2. Create foundation:**
-```
-.neev/foundation/contributing.md   # How to contribute
-.neev/foundation/conventions.md    # Code style & patterns
-```
-
-**3. Share with new team members:**
-```bash
-neev bridge > ONBOARDING.md
-```
-
-### Example: API Specification & Testing
-
-**1. Create API blueprint:**
-```bash
-neev draft "user-api"
-```
-
-**2. Document endpoints in architecture.md:**
-```markdown
-# User API Architecture
-
-## Endpoints
-
-### GET /api/v1/users
-List all users with pagination.
-
-**Query Parameters:**
-- `page` (default: 1): Page number
-- `limit` (default: 20): Items per page
-
-### POST /api/v1/users
-Create a new user.
-
-**Request:**
-\`\`\`json
-{
-  "name": "John Doe",
-  "email": "john@example.com"
-}
-\`\`\`
-
-### GET /api/v1/users/:id
-Get user by ID.
-```
-
-**3. Generate OpenAPI spec:**
-```bash
-neev openapi user-api
-# Creates .neev/blueprints/user-api/openapi.yaml
-```
-
-**4. Generate BDD tests:**
-```bash
-neev cucumber user-api --lang go
-# Creates .neev/blueprints/user-api/tests/api.feature
-# Creates .neev/blueprints/user-api/tests/steps.go
-```
-
-**5. Implement tests and iterate:**
-Use the generated Cucumber tests as a starting point for your API testing suite.
+**Why this matters:** Your API is built exactly as specified. No rewrites. No "wait, we said it differently in the blueprint."
 
 ## Use Cases
 
-| Use Case | How Neev Helps |
+| Scenario | How Neev Helps |
 |----------|---|
-| **AI Pair Programming** | Context-aware coding with structured project knowledge |
-| **Onboarding** | New team members get structured project overview |
-| **Architecture Decisions** | Document and share technical choices |
-| **API Documentation** | Maintain API specs alongside implementation |
-| **Feature Planning** | Capture requirements before implementation |
-| **Code Review** | Reviewers understand intent + architecture |
+| **Building with AI** | Specs → AI context → aligned code on first attempt |
+| **Team onboarding** | Blueprints = auto-generated onboarding docs |
+| **Code reviews** | Reviewers see intent + architecture, not just code |
+| **Polyrepo/monorepo** | Reference specs across repositories |
+| **API design** | Architecture → OpenAPI spec → BDD tests automatically |
+| **Preventing rework** | Specs caught early, implementation is clean |
 
 ## Development
-
-### Building & Testing
 
 ```bash
 # Build
@@ -473,171 +247,57 @@ go test ./...
 
 # Test coverage
 go test -cover ./...
-
-# Run specific command
-go run ./cli init
 ```
 
-### Setup Local Development
+**More details:**
+- [DEVELOPMENT.md](DEVELOPMENT.md) — Setup & debugging
+- [ARCHITECTURE.md](ARCHITECTURE.md) — System design
+- [CONTRIBUTING.md](CONTRIBUTING.md) — Contributing guidelines
 
-See [DEVELOPMENT.md](DEVELOPMENT.md) for:
-- Detailed setup instructions
-- IDE configuration (VSCode, GoLand)
-- Debugging with Delve
-- Performance profiling
+## Why Neev Over Manual Approaches
 
-### Understanding the Codebase
-
-See [ARCHITECTURE.md](ARCHITECTURE.md) for:
-- System design overview
-- Component interactions
-- Data flow diagrams
-- Extension points
-
-### Contributing
-
-See [CONTRIBUTING.md](CONTRIBUTING.md) for:
-- Development workflow
-- Code standards
-- Testing guidelines
-- Commit conventions
-- PR process
-
-## Key Features
-
-- **🚀 Zero Setup** — No API keys, no dependencies, no cloud login
-- **🔒 Local First** — All files stored in `.neev/`, fully version controlled
-- **🎯 AI-Optimized** — Output structured for LLM consumption
-- **🎨 Markdown Native** — Work in the format you already know
-- **⚡ Multi-Module** — Go-based with modular architecture
-- **📦 Production Ready** — Structured logging, error handling, configuration management
-- **✅ Well Tested** — 50+ comprehensive tests across all packages
-- **🔄 CI/CD Ready** — GitHub Actions workflows included
-
-## Standards & Practices
-
-Neev follows industry best practices:
-
-- **Structured Logging** — `slog` for consistent, parseable logs
-- **Error Handling** — Custom error types with solution hints
-- **Configuration** — YAML-based with validation and defaults
-- **Testing** — Unit tests, integration tests, table-driven tests
-- **Conventional Commits** — Clear git history
-- **Clean Architecture** — Separation of concerns, testable design
-
-See [ARCHITECTURE.md](ARCHITECTURE.md) for details.
-
-## Comparison with Similar Tools
-
-| Feature | Neev | Spec-Kit | OpenSpec |
-|---------|------|----------|----------|
-| **Local Files** | ✅ | ✅ | ✅ |
-| **No External API** | ✅ | ✅ | ✅ |
-| **Greenfield (0→1)** | ✅ | ⭐ | ✅ |
-| **Brownfield (1→n)** | ✅ | ✅ | ⭐ |
-| **Blueprint Templates** | ✅ | ✅ | ✅ |
-| **Context Aggregation** | ✅ | Limited | ✅ |
-| **Written in** | Go | Python | TypeScript |
-| **CLI First** | ✅ | ✅ | ✅ |
-
-**Best For:**
-- **Neev** — Go projects, CLI tools, fast setup
-- **Spec-Kit** — Comprehensive spec-driven workflow
-- **OpenSpec** — Teams with complex change management
-
-## Real-World Example
-
-```bash
-# 1. Initialize in your Go project
-$ neev init
-
-# 2. Plan features as blueprints
-$ neev draft "User API"
-$ neev draft "Authentication"
-
-# 3. Document in .neev/foundation/
-# Edited: .neev/foundation/principles.md
-#   - Security-first design
-#   - RESTful APIs
-#   - PostgreSQL for persistence
-
-# 4. Get AI-ready context
-$ neev bridge --focus user > user-context.md
-
-# 5. Share with Claude/Copilot for implementation
-```
-
-The output is ready for: "Build this according to the context above"
-
-## Troubleshooting
-
-| Issue | Solution |
-|-------|----------|
-| `command not found: neev` | Ensure `$GOPATH/bin` is in `$PATH` or build locally |
-| `.neev` already exists | Use `neev init` only once per project |
-| No blueprints generated | Run `neev draft "name"` to create blueprints |
-| Bridge output is empty | Check that `.neev/foundation/` and `.neev/blueprints/` have `.md` files |
-
-See [USAGE.md](USAGE.md) for detailed troubleshooting.
+| Aspect | Manual Specs | Neev |
+|--------|------|------|
+| **Specs stay in sync** | ❌ Gets outdated | ✅ `neev inspect` catches drift |
+| **AI context** | ❌ Copy/paste manually | ✅ `neev bridge` auto-aggregates |
+| **Onboarding docs** | ❌ Write separately | ✅ Blueprints ARE docs |
+| **API documentation** | ❌ Manual work | ✅ `neev openapi` generates |
+| **Test scaffolding** | ❌ Write from scratch | ✅ `neev cucumber` generates |
+| **Versioned specs** | ❌ External tools | ✅ All in git (.neev/) |
 
 ## FAQ
 
-**Q: Do I need to commit `.neev/` to git?**  
-A: Yes! `.neev/` contains your project knowledge and should be versioned.
+**Q: Does Neev work with my tech stack?**  
+A: Yes. Node, Python, Go, Rust, .NET, Java, etc. Neev works with any project.
 
-**Q: Can I use Neev with non-Go projects?**  
-A: Absolutely. Neev works with any project type.
+**Q: Do I have to commit `.neev/` to git?**  
+A: Yes. `.neev/` is your project's architecture. It should be versioned.
 
-**Q: How does Neev compare to writing prompts manually?**  
-A: Neev structures your knowledge so AI gets context automatically, reducing manual copy/paste and keeping things in sync.
+**Q: How is this different from writing prompts?**  
+A: Specs in `.neev/` stay in sync with implementation. Manual prompts don't — they become stale.
 
 **Q: Can teams share blueprints?**  
-A: Yes. Common patterns can be captured in `.neev/foundation/` and reused across projects.
+A: Yes, via `neev sync-remotes`. Reference foundations from other repos.
 
 **Q: What about large projects?**  
-A: Use `--focus` flag to filter context by keywords. Blueprints can reference each other.
+A: Use `--focus` to filter context by keywords. Blueprints can nest and reference each other.
 
-## Status
+**More questions?** See [FAQ.md](FAQ.md)
 
-- ✅ **Phase 1**: Blueprint drafting & context bridging
-- ✅ **Phase 2**: Test coverage & CLI hardening
-- ✅ **Phase 3**: Comprehensive test suite
-- ✅ **Phase 4**: Production hardening (logging, errors, config, CI/CD)
-- 🚀 **v1.0.0**: Ready for production use
+## License & Contributing
 
-## License
+MIT License — See [LICENSE](LICENSE)
 
-MIT License — See [LICENSE](LICENSE) file
+**Want to contribute?** See [CONTRIBUTING.md](CONTRIBUTING.md)
 
-## Contributing
-
-Contributions welcome! See [CONTRIBUTING.md](CONTRIBUTING.md)
-
-- 🐛 Found a bug? [Open an issue](https://github.com/neev-kit/neev/issues)
-- ✨ Have an idea? [Start a discussion](https://github.com/neev-kit/neev/discussions)
-- 🔧 Want to contribute? [See CONTRIBUTING.md](CONTRIBUTING.md)
-
-## Maintainers
-
-See [MAINTAINERS.md](MAINTAINERS.md) for core team and advisors.
+- 🐛 [Report bugs](https://github.com/neev-kit/neev/issues)
+- 💡 [Suggest features](https://github.com/neev-kit/neev/discussions)
+- 🔧 [Submit PRs](https://github.com/neev-kit/neev/pulls)
 
 ---
 
-**Ready to build better software with AI?** 
+## Next Steps
 
-## 📚 Documentation
-
-**👉 [Complete Documentation Index](DOCUMENTATION.md)** — Find exactly what you need
-
-### Quick Links
-
-- **🚀 [Getting Started](GETTING_STARTED.md)** — Complete beginner's guide
-- **📖 [Usage Guide](USAGE.md)** — Detailed command reference
-- **📋 [API Reference](API_REFERENCE.md)** — Complete command documentation
-- **🎓 [Tutorials](TUTORIALS.md)** — 8 step-by-step walkthroughs
-- **💡 [Best Practices](BEST_PRACTICES.md)** — Patterns and anti-patterns
-- **❓ [FAQ](FAQ.md)** — Common questions and troubleshooting
-- **🏗️ [Architecture](ARCHITECTURE.md)** — System design
-- **💻 [Development](DEVELOPMENT.md)** — Contributing guide
-
-**New to Neev?** Start with [Getting Started](GETTING_STARTED.md) → Try a [Tutorial](TUTORIALS.md) → Master [Best Practices](BEST_PRACTICES.md)
+1. **Try it now:** `neev init && neev draft "My Feature"`
+2. **Learn more:** [GETTING_STARTED.md](GETTING_STARTED.md) or [COMMAND_CATALOG.md](COMMAND_CATALOG.md)
+3. **Build with AI:** `neev bridge` → copy to Claude/Copilot → ship aligned code
