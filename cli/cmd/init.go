@@ -3,9 +3,11 @@ package cmd
 import (
 	"fmt"
 	"os"
+	"path/filepath"
 
 	"github.com/charmbracelet/lipgloss"
 	"github.com/neev-kit/neev/core/foundation"
+	"github.com/neev-kit/neev/core/slash"
 	"github.com/spf13/cobra"
 )
 
@@ -32,6 +34,17 @@ var initCmd = &cobra.Command{
 
 			fmt.Println(errorStyle.Render("❌ Error: " + err.Error()))
 			os.Exit(1)
+		}
+
+		// Generate AGENTS.md for AI tool integration
+		projectName := filepath.Base(cwd)
+		agentsMD := slash.GenerateAgentsMD(slash.SupportedAITools, projectName)
+		agentsMDPath := filepath.Join(cwd, "AGENTS.md")
+		
+		if err := os.WriteFile(agentsMDPath, []byte(agentsMD), 0644); err != nil {
+			fmt.Printf("Warning: Failed to create AGENTS.md: %v\n", err)
+		} else {
+			fmt.Println("📋 Created AGENTS.md with slash command definitions")
 		}
 
 		successStyle := lipgloss.NewStyle().
