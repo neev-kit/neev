@@ -9,9 +9,9 @@ type SlashCommand struct {
 
 // AIToolConfig defines slash commands for a specific AI tool
 type AIToolConfig struct {
-	Name          string          `yaml:"name"`
-	Enabled       bool            `yaml:"enabled"`
-	SlashCommands []SlashCommand  `yaml:"slash_commands"`
+	Name          string         `yaml:"name"`
+	Enabled       bool           `yaml:"enabled"`
+	SlashCommands []SlashCommand `yaml:"slash_commands"`
 }
 
 // SlashCommandConfig contains all supported slash commands

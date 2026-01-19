@@ -40,7 +40,7 @@ var initCmd = &cobra.Command{
 		projectName := filepath.Base(cwd)
 		agentsMD := slash.GenerateAgentsMD(slash.SupportedAITools, projectName)
 		agentsMDPath := filepath.Join(cwd, "AGENTS.md")
-		
+
 		if err := os.WriteFile(agentsMDPath, []byte(agentsMD), 0644); err != nil {
 			fmt.Printf("Warning: Failed to create AGENTS.md: %v\n", err)
 		} else {
