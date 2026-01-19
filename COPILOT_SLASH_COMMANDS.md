@@ -2,7 +2,9 @@
 
 ## Overview
 
-Neev now has **fully functional GitHub Copilot slash commands** that work natively in GitHub Copilot Chat, just like Spec-Kit's implementation.
+Neev now has **fully functional GitHub Copilot slash commands** that work natively in GitHub Copilot Chat. The implementation approach is inspired by [Spec-Kit](https://github.com/github/spec-kit)'s pioneering work on GitHub Copilot integration.
+
+> **Attribution**: Special thanks to [Spec-Kit](https://github.com/github/spec-kit) for demonstrating how to integrate slash commands into GitHub Copilot Chat. See [ACKNOWLEDGMENTS.md](ACKNOWLEDGMENTS.md) for more details on projects that influenced Neev's design.
 
 ## What Was Implemented
 
@@ -183,10 +185,11 @@ Users can now:
 
 ## References
 
-- Implementation follows [Spec-Kit's](https://github.com/github/spec-kit) approach
-- Uses JSON manifest format for Copilot compatibility
+- Implementation approach inspired by [Spec-Kit](https://github.com/github/spec-kit)
+- JSON manifest format for Copilot compatibility
 - Supports alias commands for flexibility
 - Includes context documentation for each command
+- See [ACKNOWLEDGMENTS.md](ACKNOWLEDGMENTS.md) for full attribution
 
 ## Status
 

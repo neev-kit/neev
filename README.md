@@ -311,6 +311,10 @@ MIT License — See [LICENSE](LICENSE)
 - 💡 [Suggest features](https://github.com/neev-kit/neev/discussions)
 - 🔧 [Submit PRs](https://github.com/neev-kit/neev/pulls)
 
+## Acknowledgments
+
+Neev is inspired by and builds on ideas from **Spec-Kit** (GitHub) and **OpenSpec** (Fission-AI). See [ACKNOWLEDGMENTS.md](ACKNOWLEDGMENTS.md) for details on projects and people who influenced Neev's design.
+
 ---
 
 ## Next Steps
