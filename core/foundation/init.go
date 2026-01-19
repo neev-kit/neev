@@ -65,14 +65,24 @@ func Initialize(cwd string) error {
 		return fmt.Errorf("failed to generate command manifests: %w", err)
 	}
 
-	// Generate Copilot instructions file
-	copilotInstructions := generateCopilotInstructions(projectName)
+	// Generate Copilot instructions and slash command manifest
+	copilotInstructions := GenerateCopilotChatInstructions(projectName)
 	copilotPath := filepath.Join(cwd, ".github", "copilot-instructions.md")
 	if err := os.MkdirAll(filepath.Dir(copilotPath), 0755); err != nil {
 		return fmt.Errorf("failed to create .github directory: %w", err)
 	}
 	if err := os.WriteFile(copilotPath, []byte(copilotInstructions), 0644); err != nil {
 		return fmt.Errorf("failed to write copilot instructions: %w", err)
+	}
+
+	// Generate slash command manifest for Copilot
+	slashCommandManifest, err := GenerateSlashCommandManifest(projectName)
+	if err != nil {
+		return fmt.Errorf("failed to generate slash command manifest: %w", err)
+	}
+	slashCommandPath := filepath.Join(cwd, ".github", "slash-commands.json")
+	if err := os.WriteFile(slashCommandPath, []byte(slashCommandManifest), 0644); err != nil {
+		return fmt.Errorf("failed to write slash command manifest: %w", err)
 	}
 
 	// Create default neev.yaml
@@ -94,70 +104,3 @@ func Initialize(cwd string) error {
 
 	return nil
 }
-
-// generateCopilotInstructions creates GitHub Copilot Chat instructions
-func generateCopilotInstructions(projectName string) string {
-	return `# GitHub Copilot Instructions for ` + projectName + `
-
-This project uses Neev for spec-driven development.
-
-## Development Guidelines
-
-- Follow the architecture defined in foundation specifications
-- Implement features according to blueprint intent and architecture
-- Use ` + "`neev bridge`" + ` to get full context for complex tasks
-- Run ` + "`neev inspect`" + ` to check for drift between specs and code
-
-## Neev Slash Commands for Copilot Chat
-
-You can use these slash commands in GitHub Copilot Chat:
-
-### ` + "`/neev:bridge`" + `
-Generate aggregated project context for AI. Retrieves and summarizes project structure, architecture, blueprints, and all relevant documentation.
-
-**Usage:** ` + "`/neev:bridge`" + ` - Get full project context
-
-### ` + "`/neev:draft`" + `
-Create a new blueprint for planning features or components.
-
-**Usage:** ` + "`/neev:draft`" + ` - Create a new blueprint
-
-### ` + "`/neev:inspect`" + `
-Analyze project structure and find gaps or inconsistencies between specifications and implementation.
-
-**Usage:** ` + "`/neev:inspect`" + ` - Check for drift between specs and code
-
-### ` + "`/neev:cucumber`" + `
-Generate Cucumber/BDD test scaffolding and scenarios.
-
-**Usage:** ` + "`/neev:cucumber`" + ` - Generate BDD tests for this feature
-
-### ` + "`/neev:openapi`" + `
-Generate OpenAPI specification from blueprint architecture and API design.
-
-**Usage:** ` + "`/neev:openapi`" + ` - Generate API spec for this blueprint
-
-### ` + "`/neev:handoff`" + `
-Format context and specifications for AI agent handoff or team handover.
-
-**Usage:** ` + "`/neev:handoff`" + ` - Prepare context for handoff
-
-## How to Run Commands
-
-In **VS Code with GitHub Copilot Chat**:
-1. Open Copilot Chat (Cmd+Shift+I on Mac, Ctrl+Shift+I on Windows/Linux)
-2. Type any of the slash commands above (` + "`/neev:bridge`" + `, ` + "`/neev:draft`" + `, etc.)
-3. Copilot will execute the Neev CLI command and provide results
-
-From **Terminal**:
-` + "```bash" + `
-neev bridge       # Generate project context
-neev draft        # Create new blueprint
-neev inspect      # Analyze project structure
-neev cucumber     # Generate BDD tests
-neev openapi      # Generate API spec
-neev handoff      # Prepare for handoff
-` + "```" + `
-`
-}
-
