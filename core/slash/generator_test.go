@@ -1,6 +1,7 @@
 package slash
 
 import (
+	"encoding/json"
 	"strings"
 	"testing"
 )
@@ -119,5 +120,76 @@ func TestSlashCommandStructure(t *testing.T) {
 		if cmd.Prompt == "" {
 			t.Errorf("Command %s has empty Prompt field", name)
 		}
+	}
+}
+
+func TestGenerateGitHubCopilotManifest(t *testing.T) {
+	result, err := GenerateGitHubCopilotManifest("TestProject")
+
+	if err != nil {
+		t.Errorf("Expected no error, got %v", err)
+	}
+
+	if !strings.Contains(result, "TestProject") {
+		t.Error("Expected project name in manifest")
+	}
+
+	if !strings.Contains(result, "version") {
+		t.Error("Expected version field in JSON")
+	}
+
+	// Verify it's valid JSON
+	var manifest GitHubCopilotManifest
+	if err := json.Unmarshal([]byte(result), &manifest); err != nil {
+		t.Errorf("Expected valid JSON, got error: %v", err)
+	}
+
+	if manifest.Version != "1.0.0" {
+		t.Errorf("Expected version 1.0.0, got %s", manifest.Version)
+	}
+
+	if manifest.ProjectName != "TestProject" {
+		t.Errorf("Expected project name TestProject, got %s", manifest.ProjectName)
+	}
+
+	// Check all commands are present
+	expectedCommands := []string{"neev:bridge", "neev:draft", "neev:inspect", "neev:cucumber", "neev:openapi", "neev:handoff"}
+	for _, cmd := range expectedCommands {
+		if _, exists := manifest.Commands[cmd]; !exists {
+			t.Errorf("Expected command %s in manifest", cmd)
+		}
+	}
+}
+
+func TestGenerateGitHubCopilotManifest_CommandMetadata(t *testing.T) {
+	result, _ := GenerateGitHubCopilotManifest("TestProject")
+
+	var manifest GitHubCopilotManifest
+	json.Unmarshal([]byte(result), &manifest)
+
+	// Verify bridge command has all required metadata
+	bridgeCmd, exists := manifest.Commands["neev:bridge"]
+	if !exists {
+		t.Fatal("Expected neev:bridge command")
+	}
+
+	if bridgeCmd.Name != "bridge" {
+		t.Errorf("Expected name 'bridge', got '%s'", bridgeCmd.Name)
+	}
+
+	if bridgeCmd.Description == "" {
+		t.Error("Expected non-empty description")
+	}
+
+	if bridgeCmd.Prompt == "" {
+		t.Error("Expected non-empty prompt")
+	}
+
+	if bridgeCmd.Icon == "" {
+		t.Error("Expected icon for command")
+	}
+
+	if len(bridgeCmd.Aliases) == 0 {
+		t.Error("Expected at least one alias")
 	}
 }

@@ -1,6 +1,7 @@
 package slash
 
 import (
+	"encoding/json"
 	"fmt"
 	"strings"
 )
@@ -109,4 +110,63 @@ func formatToolName(toolName string) string {
 		}
 		return strings.Join(words, " ")
 	}
+}
+
+// GitHubCopilotCommand represents a single slash command for GitHub Copilot
+type GitHubCopilotCommand struct {
+	Name        string   `json:"name"`
+	Description string   `json:"description"`
+	Prompt      string   `json:"prompt"`
+	Aliases     []string `json:"aliases,omitempty"`
+	Context     string   `json:"context,omitempty"`
+	Icon        string   `json:"icon,omitempty"`
+}
+
+// GitHubCopilotManifest represents the complete manifest for GitHub Copilot
+type GitHubCopilotManifest struct {
+	Version     string                          `json:"version"`
+	ProjectName string                          `json:"project_name"`
+	Description string                          `json:"description"`
+	Commands    map[string]GitHubCopilotCommand `json:"commands"`
+}
+
+// GenerateGitHubCopilotManifest creates a GitHub Copilot-compatible slash command manifest in JSON format
+func GenerateGitHubCopilotManifest(projectName string) (string, error) {
+	// Build command map with full metadata
+	commands := make(map[string]GitHubCopilotCommand)
+
+	// Map of icon emojis for each command
+	icons := map[string]string{
+		"bridge":   "🌉",
+		"draft":    "📋",
+		"inspect":  "🔍",
+		"cucumber": "🥒",
+		"openapi":  "📖",
+		"handoff":  "🤝",
+	}
+
+	for cmd, details := range DefaultSlashCommands {
+		commands[fmt.Sprintf("neev:%s", cmd)] = GitHubCopilotCommand{
+			Name:        cmd,
+			Description: details.Description,
+			Prompt:      details.Prompt,
+			Aliases:     []string{cmd},
+			Context:     fmt.Sprintf("Use this command when you need to %s", strings.ToLower(details.Description)),
+			Icon:        icons[cmd],
+		}
+	}
+
+	manifest := GitHubCopilotManifest{
+		Version:     "1.0.0",
+		ProjectName: projectName,
+		Description: "Neev slash commands for spec-driven development with GitHub Copilot Chat",
+		Commands:    commands,
+	}
+
+	data, err := json.MarshalIndent(manifest, "", "  ")
+	if err != nil {
+		return "", fmt.Errorf("failed to marshal GitHub Copilot manifest: %w", err)
+	}
+
+	return string(data), nil
 }

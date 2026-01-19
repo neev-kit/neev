@@ -16,6 +16,7 @@ var slashCommandsCmd = &cobra.Command{
 	Run: func(cmd *cobra.Command, args []string) {
 		list, _ := cmd.Flags().GetBool("list")
 		update, _ := cmd.Flags().GetBool("update")
+		register, _ := cmd.Flags().GetBool("register")
 		tool, _ := cmd.Flags().GetString("tool")
 
 		cwd, _ := os.Getwd()
@@ -24,6 +25,8 @@ var slashCommandsCmd = &cobra.Command{
 			listSlashCommands()
 		} else if update {
 			updateSlashCommands(cwd)
+		} else if register {
+			registerSlashCommands(cwd)
 		} else if tool != "" {
 			showToolCommands(tool)
 		} else {
@@ -65,9 +68,35 @@ func showToolCommands(toolName string) {
 	fmt.Println(manifest)
 }
 
+func registerSlashCommands(cwd string) {
+	projectName := filepath.Base(cwd)
+
+	// Generate GitHub Copilot slash-commands.json
+	slashCommandsJSON, err := slash.GenerateGitHubCopilotManifest(projectName)
+	if err != nil {
+		fmt.Printf("❌ Failed to generate slash-commands manifest: %v\n", err)
+		os.Exit(1)
+	}
+
+	slashCommandsPath := filepath.Join(cwd, ".github", "slash-commands.json")
+	if err := os.MkdirAll(filepath.Dir(slashCommandsPath), 0755); err != nil {
+		fmt.Printf("❌ Failed to create .github directory: %v\n", err)
+		os.Exit(1)
+	}
+
+	if err := os.WriteFile(slashCommandsPath, []byte(slashCommandsJSON), 0644); err != nil {
+		fmt.Printf("❌ Failed to write slash-commands.json: %v\n", err)
+		os.Exit(1)
+	}
+
+	fmt.Println("✅ Registered slash commands with GitHub Copilot")
+	fmt.Printf("📝 Created: %s\n", slashCommandsPath)
+}
+
 func init() {
 	slashCommandsCmd.Flags().Bool("list", false, "List all available slash commands")
 	slashCommandsCmd.Flags().Bool("update", false, "Update AGENTS.md with latest commands")
+	slashCommandsCmd.Flags().Bool("register", false, "Register slash commands with GitHub Copilot")
 	slashCommandsCmd.Flags().String("tool", "", "Show commands for a specific AI tool")
 	rootCmd.AddCommand(slashCommandsCmd)
 }

@@ -44,6 +44,12 @@ func TestSlashCommandsCmd_HasUpdateFlag(t *testing.T) {
 	}
 }
 
+func TestSlashCommandsCmd_HasRegisterFlag(t *testing.T) {
+	if flag := slashCommandsCmd.Flag("register"); flag == nil {
+		t.Error("Expected --register flag")
+	}
+}
+
 func TestSlashCommandsCmd_HasToolFlag(t *testing.T) {
 	if flag := slashCommandsCmd.Flag("tool"); flag == nil {
 		t.Error("Expected --tool flag")
