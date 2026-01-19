@@ -307,6 +307,13 @@ MIT License — See [LICENSE](LICENSE)
 
 **Want to contribute?** See [CONTRIBUTING.md](CONTRIBUTING.md)
 
+**Community Standards:**
+- 📋 [Code of Conduct](CODE_OF_CONDUCT.md) — Community guidelines
+- 🔒 [Security Policy](SECURITY.md) — Reporting vulnerabilities
+- 📝 [Changelog](CHANGELOG.md) — Release history and updates
+- 📊 [Open Source Policy](OPEN_SOURCE_POLICY.md) — Compliance details
+
+**Get Involved:**
 - 🐛 [Report bugs](https://github.com/neev-kit/neev/issues)
 - 💡 [Suggest features](https://github.com/neev-kit/neev/discussions)
 - 🔧 [Submit PRs](https://github.com/neev-kit/neev/pulls)
