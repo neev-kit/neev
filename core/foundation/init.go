@@ -43,6 +43,20 @@ func Initialize(cwd string) error {
 		return fmt.Errorf("failed to create foundation directory: %w", err)
 	}
 
+	// Create foundation files with templates
+	foundationFiles := map[string]string{
+		"stack.md":      "# Technology Stack\n\nDescribe the technologies used in your project (e.g., \"We use Go, PostgreSQL, Redis\")",
+		"principles.md": "# Design Principles\n\nDocument your core design principles (e.g., \"Security first, simplicity second\")",
+		"patterns.md":   "# Patterns & Practices\n\nOutline your architectural patterns and practices (e.g., \"Repository pattern, dependency injection\")",
+	}
+
+	for file, content := range foundationFiles {
+		filePath := filepath.Join(foundationPath, file)
+		if err := os.WriteFile(filePath, []byte(content), 0644); err != nil {
+			return fmt.Errorf("failed to create foundation file %s: %w", filePath, err)
+		}
+	}
+
 	// Create default neev.yaml
 	defaultConfig := DefaultConfig{
 		Version:     "1.0.0",
