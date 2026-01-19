@@ -2,7 +2,7 @@
 # This configuration builds and releases binaries for multiple platforms
 # Supports: Darwin (Intel/ARM64), Linux, and Windows
 
-version: 1
+version: 2
 
 project_name: neev
 dist: dist
@@ -74,7 +74,7 @@ checksum:
   algorithm: sha256
 
 snapshot:
-  name_template: "{{ incpatch .Version }}-next"
+  version_template: "{{ incpatch .Version }}-next"
 
 release:
   github:
