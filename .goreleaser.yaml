@@ -2,15 +2,10 @@
 # This configuration builds and releases binaries for multiple platforms
 # Supports: Darwin (Intel/ARM64), Linux, and Windows
 
-version: 2
+version: 1
 
 project_name: neev
 dist: dist
-
-before:
-  hooks:
-    # Skip go mod tidy for workspace - modules are local, not remote
-    # Just build directly
 
 builds:
   - id: "neev"
@@ -46,29 +41,6 @@ archives:
       - README.md
       - LICENSE
 
-# Homebrew formula generation
-# Uncomment and configure when ready to publish to a Homebrew tap
-# Requirements: Set HOMEBREW_TAP_TOKEN environment variable
-# brews:
-#   - repository:
-#       owner: neev-kit
-#       name: homebrew-neev
-#       token: "{{ .Env.HOMEBREW_TAP_TOKEN }}"
-#     directory: Formula
-#     homepage: "https://github.com/neev-kit/neev"
-#     description: "Neev: A modular blueprint-driven architecture tool"
-#     license: "MIT"
-#     test: |
-#       system "#{bin}/neev --help"
-#     dependencies:
-#       - name: go
-#         type: optional
-#     install: |
-#       bin.install "neev"
-#     post_install: |
-#       puts "Neev installed successfully! Run 'neev --help' to get started."
-
-# Checksum file
 checksum:
   name_template: "{{ .ProjectName }}_{{ .Version }}_checksums.txt"
   algorithm: sha256
@@ -82,7 +54,7 @@ release:
     name: neev
   draft: false
   prerelease: false
-  mode: keep-existing
+  name_template: 'Release {{.Version}}'
 
 changelog:
   sort: asc
