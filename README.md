@@ -159,106 +159,55 @@ Aggregated, searchable project information ready for AI consumption. Generated v
 
 ## Commands
 
-### `neev init`
+Neev provides 14 powerful commands for blueprint management and AI integration. Here's a quick overview:
 
-Initialize Neev in your project.
+| Command | Purpose |
+|---------|---------|
+| `neev init` | Initialize Neev foundation in your project |
+| `neev draft <title>` | Create a new blueprint |
+| `neev bridge [flags]` | Aggregate project context for AI agents |
+| `neev inspect [flags]` | Verify project structure matches specs |
+| `neev openapi <blueprint>` | Generate OpenAPI specification |
+| `neev cucumber <blueprint>` | Generate BDD test scaffolding |
+| `neev handoff <role>` | Create AI handoff prompts |
+| `neev lay <blueprint>` | Archive blueprint to foundation |
+| `neev instructions` | Update GitHub Copilot instructions |
+| `neev slash-commands` | Manage AI tool slash commands |
+| `neev migrate [flags]` | Convert from OpenSpec/Spec-Kit to Neev |
+| `neev sync-remotes [flags]` | Sync remote foundations |
+
+### Quick Examples
 
 ```bash
+# Initialize project
 neev init
-```
 
-**Creates:**
-- `.neev/` directory structure
-- `neev.yaml` configuration file
-- Empty `blueprints/` and `foundation/` directories
-- Prevents accidental overwrites
-
-### `neev draft <title>`
-
-Create a new blueprint with template files.
-
-```bash
+# Create a blueprint
 neev draft "user-authentication"
-neev draft "API Gateway"
+
+# Get AI context
+neev bridge
+
+# Generate API docs
+neev openapi user-authentication
+
+# Generate BDD tests
+neev cucumber user-authentication --lang go
+
+# Verify specs
+neev inspect
 ```
 
-**Creates:**
-- Blueprint directory with sanitized name
-- `intent.md` — Purpose and goals
-- `architecture.md` — Technical design
+### Complete Command Reference
 
-### `neev bridge [flags]`
+📚 **For comprehensive documentation of all commands with examples and flags, see [COMMAND_CATALOG.md](COMMAND_CATALOG.md)**
 
-Aggregate and output project context.
-
-```bash
-neev bridge                    # Full context
-neev bridge --focus auth       # Filter by keyword
-neev bridge -f db > context.md # Save to file
-```
-
-**Flags:**
-- `--focus, -f` — Filter by keyword
-
-**Output:** Markdown with all foundation + blueprint content
-
-### `neev inspect` (internal)
-
-Analyze project structure and find missing blueprints.
-
-```bash
-neev inspect                    # Human-readable output
-neev inspect --json             # Machine-readable JSON for CI/CD
-neev inspect --use-descriptors  # File-level validation with .module.yaml
-```
-
-### `neev sync-remotes`
-
-Synchronize remote foundation sources from other repositories.
-
-```bash
-neev sync-remotes               # Sync all remotes from neev.yaml
-neev sync-remotes --json        # JSON output
-```
-
-### `neev instructions`
-
-Generate GitHub Copilot instructions from your foundation and blueprints.
-
-```bash
-neev instructions               # Creates .github/copilot-instructions.md
-```
-
-### `neev openapi <blueprint>`
-
-Generate OpenAPI 3.1 specification from a blueprint's architecture.md.
-
-```bash
-neev openapi user-api           # Creates openapi.yaml in blueprint folder
-```
-
-**Features:**
-- Parses endpoint definitions from architecture.md
-- Generates valid OpenAPI 3.1 YAML
-- Automatically detects path parameters
-- Includes request/response schemas
-
-### `neev cucumber <blueprint> [--lang <language>]`
-
-Generate Cucumber/BDD test scaffolding from a blueprint's architecture.md.
-
-```bash
-neev cucumber user-api --lang go           # Generate with Go step definitions
-neev cucumber user-api --lang javascript  # Generate with JavaScript steps
-neev cucumber user-api --lang python      # Generate with Python steps
-neev cucumber user-api                     # Feature file only
-```
-
-**Features:**
-- Generates Gherkin feature files from API endpoints
-- Creates step definition scaffolds (Go, JavaScript, Python)
-- Includes test scenarios for all HTTP methods
-- Handles authentication and parameter setup
+This includes:
+- Detailed syntax and flags for each command
+- Real-world usage examples
+- Output formats and structure
+- Common workflows
+- When to use each command
 
 ## Production Features
 

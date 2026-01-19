@@ -7,19 +7,19 @@ import (
 
 // SlashCommandManifest represents GitHub Copilot's slash command format
 type SlashCommandManifest struct {
-	Version      string                        `json:"version"`
-	Commands     map[string]SlashCommandDef    `json:"commands"`
-	Description  string                        `json:"description"`
-	ProjectName  string                        `json:"project_name"`
+	Version     string                     `json:"version"`
+	Commands    map[string]SlashCommandDef `json:"commands"`
+	Description string                     `json:"description"`
+	ProjectName string                     `json:"project_name"`
 }
 
 // SlashCommandDef defines a single slash command for GitHub Copilot
 type SlashCommandDef struct {
-	Name        string `json:"name"`
-	Description string `json:"description"`
-	Prompt      string `json:"prompt"`
+	Name        string   `json:"name"`
+	Description string   `json:"description"`
+	Prompt      string   `json:"prompt"`
 	Aliases     []string `json:"aliases,omitempty"`
-	Context     string `json:"context,omitempty"`
+	Context     string   `json:"context,omitempty"`
 }
 
 // GenerateSlashCommandManifest creates GitHub Copilot-compatible slash command manifest

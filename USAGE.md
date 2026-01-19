@@ -4,10 +4,12 @@ A comprehensive guide to using Neev CLI for project blueprint management and AI 
 
 > **📚 Complete Documentation Suite:**
 > - **New to Neev?** Start with [Getting Started](GETTING_STARTED.md)
-> - **Need command details?** See [API Reference](API_REFERENCE.md)
+> - **All commands reference?** See [COMMAND_CATALOG.md](COMMAND_CATALOG.md) ⭐ *START HERE*
+> - **API details?** See [API Reference](API_REFERENCE.md)
 > - **Want step-by-step guides?** Check [Tutorials](TUTORIALS.md)
 > - **Looking for patterns?** Read [Best Practices](BEST_PRACTICES.md)
 > - **Have questions?** Browse [FAQ](FAQ.md)
+> - **Documentation gaps found?** See [CRITICAL_DOCUMENTATION_GAP_ANALYSIS.md](CRITICAL_DOCUMENTATION_GAP_ANALYSIS.md)
 
 ## Table of Contents
 
