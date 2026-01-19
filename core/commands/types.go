@@ -2,18 +2,18 @@ package commands
 
 // Command represents a slash command definition
 type Command struct {
-	ID          string                 `yaml:"id"`
-	Name        string                 `yaml:"name"`
-	Description string                 `yaml:"description"`
-	Prompt      string                 `yaml:"prompt"`
-	Icon        string                 `yaml:"icon,omitempty"`
-	Category    string                 `yaml:"category,omitempty"`
+	ID          string `yaml:"id"`
+	Name        string `yaml:"name"`
+	Description string `yaml:"description"`
+	Prompt      string `yaml:"prompt"`
+	Icon        string `yaml:"icon,omitempty"`
+	Category    string `yaml:"category,omitempty"`
 }
 
 // CommandRegistry stores all registered commands
 type CommandRegistry struct {
-	Version     string            `yaml:"version"`
-	ProjectName string            `yaml:"project_name"`
+	Version     string             `yaml:"version"`
+	ProjectName string             `yaml:"project_name"`
 	Commands    map[string]Command `yaml:"commands"`
 	ToolSupport map[string]bool    `yaml:"tool_support"`
 }
