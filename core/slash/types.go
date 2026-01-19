@@ -23,6 +23,7 @@ type SlashCommandConfig struct {
 // SupportedAITools lists AI tools with native slash command support
 var SupportedAITools = []string{
 	"claude-code",
+	"github-copilot",
 	"cursor",
 	"codebuddy",
 	"opencode",
