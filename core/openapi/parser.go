@@ -87,6 +87,8 @@ func ParseArchitecture(filePath string) ([]Endpoint, error) {
 		if matches := endpointRe.FindStringSubmatch(line); matches != nil {
 			// Save previous endpoint if exists
 			if currentEndpoint != nil {
+				// Detect path parameters before saving
+				detectPathParameters(currentEndpoint)
 				endpoints = append(endpoints, *currentEndpoint)
 			}
 			
@@ -125,36 +127,12 @@ func ParseArchitecture(filePath string) ([]Endpoint, error) {
 				currentEndpoint.Parameters = append(currentEndpoint.Parameters, param)
 			}
 		}
-		
-		// Detect path parameters in the endpoint path
-		if currentEndpoint != nil && strings.Contains(currentEndpoint.Path, ":") {
-			pathParamRe := regexp.MustCompile(`:(\w+)`)
-			pathParams := pathParamRe.FindAllStringSubmatch(currentEndpoint.Path, -1)
-			for _, match := range pathParams {
-				paramName := match[1]
-				// Check if not already added
-				exists := false
-				for _, p := range currentEndpoint.Parameters {
-					if p.Name == paramName && p.In == "path" {
-						exists = true
-						break
-					}
-				}
-				if !exists {
-					currentEndpoint.Parameters = append(currentEndpoint.Parameters, Parameter{
-						Name:        paramName,
-						In:          "path",
-						Description: fmt.Sprintf("%s identifier", paramName),
-						Required:    true,
-						Schema:      "string",
-					})
-				}
-			}
-		}
 	}
 	
 	// Save last endpoint
 	if currentEndpoint != nil {
+		// Detect path parameters before saving
+		detectPathParameters(currentEndpoint)
 		endpoints = append(endpoints, *currentEndpoint)
 	}
 	
@@ -163,4 +141,34 @@ func ParseArchitecture(filePath string) ([]Endpoint, error) {
 	}
 	
 	return endpoints, nil
+}
+
+// detectPathParameters detects and adds path parameters from the endpoint path
+func detectPathParameters(endpoint *Endpoint) {
+	if !strings.Contains(endpoint.Path, ":") {
+		return
+	}
+	
+	pathParamRe := regexp.MustCompile(`:(\w+)`)
+	pathParams := pathParamRe.FindAllStringSubmatch(endpoint.Path, -1)
+	for _, match := range pathParams {
+		paramName := match[1]
+		// Check if not already added
+		exists := false
+		for _, p := range endpoint.Parameters {
+			if p.Name == paramName && p.In == "path" {
+				exists = true
+				break
+			}
+		}
+		if !exists {
+			endpoint.Parameters = append(endpoint.Parameters, Parameter{
+				Name:        paramName,
+				In:          "path",
+				Description: fmt.Sprintf("%s identifier", paramName),
+				Required:    true,
+				Schema:      "string",
+			})
+		}
+	}
 }

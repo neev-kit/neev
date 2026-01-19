@@ -79,8 +79,13 @@ Delete a user.
 	}
 	
 	// Check path parameters
-	if endpoints[2].Method != "GET" && endpoints[2].Path != "/v1/users/:id" {
-		t.Errorf("Expected GET /v1/users/:id")
+	if len(endpoints[2].Parameters) < 1 {
+		t.Errorf("Expected at least 1 parameter for path params, got %d", len(endpoints[2].Parameters))
+	}
+	
+	// Check GET endpoint with path param
+	if endpoints[2].Method != "GET" || endpoints[2].Path != "/v1/users/:id" {
+		t.Errorf("Expected GET /v1/users/:id, got %s %s", endpoints[2].Method, endpoints[2].Path)
 	}
 	
 	// Path parameter should be detected
