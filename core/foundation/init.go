@@ -5,6 +5,7 @@ import (
 	"os"
 	"path/filepath"
 
+	"github.com/neev-kit/neev/core/commands"
 	"gopkg.in/yaml.v3"
 )
 
@@ -55,6 +56,13 @@ func Initialize(cwd string) error {
 		if err := os.WriteFile(filePath, []byte(content), 0644); err != nil {
 			return fmt.Errorf("failed to create foundation file %s: %w", filePath, err)
 		}
+	}
+
+	// Generate command manifests for AI tools
+	projectName := filepath.Base(cwd)
+	registry := commands.NewRegistry(projectName, cwd)
+	if err := registry.GenerateAllManifests(); err != nil {
+		return fmt.Errorf("failed to generate command manifests: %w", err)
 	}
 
 	// Create default neev.yaml
