@@ -23,11 +23,17 @@ func Draft(name string) error {
 		return fmt.Errorf("failed to create blueprint directory: %w", err)
 	}
 
-	// Create intent.md and architecture.md with default templates
-	files := []string{"intent.md", "architecture.md"}
-	for _, file := range files {
+	// Create blueprint files with templates
+	blueprintFiles := map[string]string{
+		"intent.md":       "# Intent\n\nWhat and why - describe the purpose and motivation for this blueprint.",
+		"architecture.md": "# Architecture\n\nHow it works - describe the architectural design and implementation details.",
+		"api-spec.md":     "# API Specification\n\nAPI contracts - define the endpoints, request/response formats, and protocols.",
+		"security.md":     "# Security Considerations\n\nSecurity considerations - document security best practices, threat models, and mitigations.",
+	}
+
+	for file, content := range blueprintFiles {
 		filePath := filepath.Join(blueprintPath, file)
-		if err := os.WriteFile(filePath, []byte("# Template for "+file), 0644); err != nil {
+		if err := os.WriteFile(filePath, []byte(content), 0644); err != nil {
 			return fmt.Errorf("failed to create file %s: %w", filePath, err)
 		}
 	}

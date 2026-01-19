@@ -48,6 +48,18 @@ func TestDraft_Success(t *testing.T) {
 	if _, err := os.Stat(archFile); os.IsNotExist(err) {
 		t.Errorf("Expected architecture.md at %s", archFile)
 	}
+
+	// Verify api-spec.md exists
+	apiSpecFile := filepath.Join(blueprintPath, "api-spec.md")
+	if _, err := os.Stat(apiSpecFile); os.IsNotExist(err) {
+		t.Errorf("Expected api-spec.md at %s", apiSpecFile)
+	}
+
+	// Verify security.md exists
+	securityFile := filepath.Join(blueprintPath, "security.md")
+	if _, err := os.Stat(securityFile); os.IsNotExist(err) {
+		t.Errorf("Expected security.md at %s", securityFile)
+	}
 }
 
 func TestDraft_SanitizesName(t *testing.T) {
@@ -208,6 +220,80 @@ func TestDraft_ArchitectureFileContent(t *testing.T) {
 
 	if len(content) == 0 {
 		t.Error("architecture.md should not be empty")
+	}
+}
+
+func TestDraft_ApiSpecFileContent(t *testing.T) {
+	tmpDir := t.TempDir()
+
+	// Setup .neev/blueprints directory
+	blueprintsPath := filepath.Join(tmpDir, ".neev", "blueprints")
+	if err := os.MkdirAll(blueprintsPath, 0755); err != nil {
+		t.Fatalf("Failed to create blueprints dir: %v", err)
+	}
+
+	// Change to temp directory
+	oldCwd, err := os.Getwd()
+	if err != nil {
+		t.Fatalf("Failed to get cwd: %v", err)
+	}
+	defer os.Chdir(oldCwd)
+
+	if err := os.Chdir(tmpDir); err != nil {
+		t.Fatalf("Failed to change dir: %v", err)
+	}
+
+	err = Draft("Feature")
+	if err != nil {
+		t.Errorf("Draft failed: %v", err)
+	}
+
+	// Read and verify api-spec.md content
+	apiSpecFile := filepath.Join(".neev", "blueprints", "feature", "api-spec.md")
+	content, err := os.ReadFile(apiSpecFile)
+	if err != nil {
+		t.Errorf("Failed to read api-spec.md: %v", err)
+	}
+
+	if len(content) == 0 {
+		t.Error("api-spec.md should not be empty")
+	}
+}
+
+func TestDraft_SecurityFileContent(t *testing.T) {
+	tmpDir := t.TempDir()
+
+	// Setup .neev/blueprints directory
+	blueprintsPath := filepath.Join(tmpDir, ".neev", "blueprints")
+	if err := os.MkdirAll(blueprintsPath, 0755); err != nil {
+		t.Fatalf("Failed to create blueprints dir: %v", err)
+	}
+
+	// Change to temp directory
+	oldCwd, err := os.Getwd()
+	if err != nil {
+		t.Fatalf("Failed to get cwd: %v", err)
+	}
+	defer os.Chdir(oldCwd)
+
+	if err := os.Chdir(tmpDir); err != nil {
+		t.Fatalf("Failed to change dir: %v", err)
+	}
+
+	err = Draft("Feature")
+	if err != nil {
+		t.Errorf("Draft failed: %v", err)
+	}
+
+	// Read and verify security.md content
+	securityFile := filepath.Join(".neev", "blueprints", "feature", "security.md")
+	content, err := os.ReadFile(securityFile)
+	if err != nil {
+		t.Errorf("Failed to read security.md: %v", err)
+	}
+
+	if len(content) == 0 {
+		t.Error("security.md should not be empty")
 	}
 }
 
@@ -377,15 +463,25 @@ func TestDraft_ContentNotEmpty(t *testing.T) {
 	// Verify files have content
 	intentFile := filepath.Join(".neev", "blueprints", "myfeature", "intent.md")
 	archFile := filepath.Join(".neev", "blueprints", "myfeature", "architecture.md")
+	apiSpecFile := filepath.Join(".neev", "blueprints", "myfeature", "api-spec.md")
+	securityFile := filepath.Join(".neev", "blueprints", "myfeature", "security.md")
 
 	intent, _ := os.ReadFile(intentFile)
 	arch, _ := os.ReadFile(archFile)
+	apiSpec, _ := os.ReadFile(apiSpecFile)
+	security, _ := os.ReadFile(securityFile)
 
 	if len(intent) == 0 {
 		t.Error("intent.md should have content")
 	}
 	if len(arch) == 0 {
 		t.Error("architecture.md should have content")
+	}
+	if len(apiSpec) == 0 {
+		t.Error("api-spec.md should have content")
+	}
+	if len(security) == 0 {
+		t.Error("security.md should have content")
 	}
 }
 
