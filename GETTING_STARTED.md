@@ -389,7 +389,7 @@ Congratulations! You now know the basics of Neev. Here's what to explore next:
 
 ### 🛠️ **Advanced Topics**
 
-- **Production Features** — See [PRODUCTION_ENHANCEMENTS.md](PRODUCTION_ENHANCEMENTS.md)
+- **Production Features** — See [BEST_PRACTICES.md](BEST_PRACTICES.md) for production patterns
   - Module descriptors with `.module.yaml`
   - Advanced drift detection
   - Polyrepo support

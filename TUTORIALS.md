@@ -1642,14 +1642,14 @@ mv docs/*.md docs/archive/
 # Most content now lives in .neev/
 ```
 
-### Step 8: Generate Aggregated Documentation
+### Step 8: Store Bridge Output (Optional)
 
 ```bash
-# Create comprehensive docs
-neev bridge > DOCUMENTATION.md
+# Save bridge output if needed for AI tools
+neev bridge > .neev/bridge-output.md
 
 # Add to git
-git add .neev/ DOCUMENTATION.md README.md
+git add .neev/ README.md
 git commit -m "docs: migrate to Neev structure"
 ```
 
@@ -1675,16 +1675,15 @@ jobs:
         run: |
           curl -L https://github.com/neev-kit/neev/releases/latest/download/neev_linux_amd64.tar.gz | tar xz
           sudo mv neev /usr/local/bin/
-      - name: Generate docs
+      - name: Generate Copilot instructions
         run: |
-          neev bridge > DOCUMENTATION.md
           neev instructions
-      - name: Commit
+      - name: Commit if changed
         run: |
           git config --local user.email "github-actions[bot]@users.noreply.github.com"
           git config --local user.name "github-actions[bot]"
-          git add DOCUMENTATION.md .github/copilot-instructions.md
-          git diff --staged --quiet || git commit -m "docs: auto-generate from Neev"
+          git add .github/copilot-instructions.md
+          git diff --staged --quiet || git commit -m "chore: update Copilot instructions from Neev"
           git push
 ```
 
@@ -1994,7 +1993,7 @@ neev lay "Schema Migration v2"
 Now that you've completed these tutorials, you can:
 
 1. **Apply to your project** — Start using Neev in your real projects
-2. **Explore advanced features** — Check [PRODUCTION_ENHANCEMENTS.md](PRODUCTION_ENHANCEMENTS.md)
+2. **Explore advanced features** — Check [BEST_PRACTICES.md](BEST_PRACTICES.md) for advanced patterns
 3. **Share with your team** — Help team members get started
 4. **Contribute** — Share your patterns and improvements
 
