@@ -3,6 +3,7 @@ package blueprint
 import (
 	"os"
 	"path/filepath"
+	"strings"
 	"testing"
 )
 
@@ -743,4 +744,189 @@ func TestDraft_FoundationNotOverwrittenOnSecondDraft(t *testing.T) {
 	if string(originalContent) != string(newContent) {
 		t.Error("Foundation files should not be overwritten on subsequent drafts")
 	}
+}
+
+func TestDraft_AllBlueprintFilesCreated(t *testing.T) {
+	tmpDir := t.TempDir()
+
+	blueprintsPath := filepath.Join(tmpDir, ".neev", "blueprints")
+	if err := os.MkdirAll(blueprintsPath, 0755); err != nil {
+		t.Fatalf("Failed to create blueprints dir: %v", err)
+	}
+
+	oldCwd, err := os.Getwd()
+	if err != nil {
+		t.Fatalf("Failed to get cwd: %v", err)
+	}
+	defer os.Chdir(oldCwd)
+
+	if err := os.Chdir(tmpDir); err != nil {
+		t.Fatalf("Failed to change dir: %v", err)
+	}
+
+	err = Draft("User Auth")
+	if err != nil {
+		t.Errorf("Draft failed: %v", err)
+	}
+
+	blueprintPath := filepath.Join(".neev", "blueprints", "user-auth")
+	expectedFiles := []string{"intent.md", "architecture.md", "api-spec.md", "security.md"}
+
+	for _, filename := range expectedFiles {
+		filePath := filepath.Join(blueprintPath, filename)
+		if _, err := os.Stat(filePath); os.IsNotExist(err) {
+			t.Errorf("Expected file %s to be created", filename)
+		}
+	}
+}
+
+func TestDraft_IntentFileHasDescriptiveContent(t *testing.T) {
+	tmpDir := t.TempDir()
+
+	blueprintsPath := filepath.Join(tmpDir, ".neev", "blueprints")
+	if err := os.MkdirAll(blueprintsPath, 0755); err != nil {
+		t.Fatalf("Failed to create blueprints dir: %v", err)
+	}
+
+	oldCwd, err := os.Getwd()
+	if err != nil {
+		t.Fatalf("Failed to get cwd: %v", err)
+	}
+	defer os.Chdir(oldCwd)
+
+	if err := os.Chdir(tmpDir); err != nil {
+		t.Fatalf("Failed to change dir: %v", err)
+	}
+
+	err = Draft("Feature")
+	if err != nil {
+		t.Errorf("Draft failed: %v", err)
+	}
+
+	intentFile := filepath.Join(".neev", "blueprints", "feature", "intent.md")
+	content, err := os.ReadFile(intentFile)
+	if err != nil {
+		t.Errorf("Failed to read intent.md: %v", err)
+	}
+
+	contentStr := string(content)
+	if !contains(contentStr, "intent|purpose|why") {
+		t.Error("intent.md should contain descriptive guidance about what and why")
+	}
+}
+
+func TestDraft_ArchitectureFileHasDescriptiveContent(t *testing.T) {
+	tmpDir := t.TempDir()
+
+	blueprintsPath := filepath.Join(tmpDir, ".neev", "blueprints")
+	if err := os.MkdirAll(blueprintsPath, 0755); err != nil {
+		t.Fatalf("Failed to create blueprints dir: %v", err)
+	}
+
+	oldCwd, err := os.Getwd()
+	if err != nil {
+		t.Fatalf("Failed to get cwd: %v", err)
+	}
+	defer os.Chdir(oldCwd)
+
+	if err := os.Chdir(tmpDir); err != nil {
+		t.Fatalf("Failed to change dir: %v", err)
+	}
+
+	err = Draft("Feature")
+	if err != nil {
+		t.Errorf("Draft failed: %v", err)
+	}
+
+	archFile := filepath.Join(".neev", "blueprints", "feature", "architecture.md")
+	content, err := os.ReadFile(archFile)
+	if err != nil {
+		t.Errorf("Failed to read architecture.md: %v", err)
+	}
+
+	contentStr := string(content)
+	if !contains(contentStr, "architecture|design|implementation|how") {
+		t.Error("architecture.md should contain descriptive guidance about how it works")
+	}
+}
+
+func TestDraft_ApiSpecFileHasDescriptiveContent(t *testing.T) {
+	tmpDir := t.TempDir()
+
+	blueprintsPath := filepath.Join(tmpDir, ".neev", "blueprints")
+	if err := os.MkdirAll(blueprintsPath, 0755); err != nil {
+		t.Fatalf("Failed to create blueprints dir: %v", err)
+	}
+
+	oldCwd, err := os.Getwd()
+	if err != nil {
+		t.Fatalf("Failed to get cwd: %v", err)
+	}
+	defer os.Chdir(oldCwd)
+
+	if err := os.Chdir(tmpDir); err != nil {
+		t.Fatalf("Failed to change dir: %v", err)
+	}
+
+	err = Draft("Feature")
+	if err != nil {
+		t.Errorf("Draft failed: %v", err)
+	}
+
+	apiSpecFile := filepath.Join(".neev", "blueprints", "feature", "api-spec.md")
+	content, err := os.ReadFile(apiSpecFile)
+	if err != nil {
+		t.Errorf("Failed to read api-spec.md: %v", err)
+	}
+
+	contentStr := string(content)
+	if !contains(contentStr, "api|specification|contracts|endpoint") {
+		t.Error("api-spec.md should contain descriptive guidance about API contracts")
+	}
+}
+
+func TestDraft_SecurityFileHasDescriptiveContent(t *testing.T) {
+	tmpDir := t.TempDir()
+
+	blueprintsPath := filepath.Join(tmpDir, ".neev", "blueprints")
+	if err := os.MkdirAll(blueprintsPath, 0755); err != nil {
+		t.Fatalf("Failed to create blueprints dir: %v", err)
+	}
+
+	oldCwd, err := os.Getwd()
+	if err != nil {
+		t.Fatalf("Failed to get cwd: %v", err)
+	}
+	defer os.Chdir(oldCwd)
+
+	if err := os.Chdir(tmpDir); err != nil {
+		t.Fatalf("Failed to change dir: %v", err)
+	}
+
+	err = Draft("Feature")
+	if err != nil {
+		t.Errorf("Draft failed: %v", err)
+	}
+
+	securityFile := filepath.Join(".neev", "blueprints", "feature", "security.md")
+	content, err := os.ReadFile(securityFile)
+	if err != nil {
+		t.Errorf("Failed to read security.md: %v", err)
+	}
+
+	contentStr := string(content)
+	if !contains(contentStr, "security|considerations|threat|mitigation|best practice") {
+		t.Error("security.md should contain descriptive guidance about security considerations")
+	}
+}
+
+func contains(str string, keywords string) bool {
+	// Simple substring check - if any keyword appears in the string
+	parts := strings.Split(keywords, "|")
+	for _, part := range parts {
+		if strings.Contains(strings.ToLower(str), strings.ToLower(part)) {
+			return true
+		}
+	}
+	return false
 }
