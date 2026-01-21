@@ -1,28 +1,26 @@
-# 🏗️ Neev - Spec-Driven Development for Teams
+# Neev: Spec‑Driven Development CLI
+
+**Stop vibe coding. Build exactly what you spec.**
+
+Neev is a local‑first SDD toolkit that makes your **foundation** (specs + blueprints) the source of truth, then inspects drift and bridges context to Claude/Copilot.
 
 [![Go Version](https://img.shields.io/badge/Go-1.25+-00ADD8?style=flat-square&logo=go)](https://golang.org/dl/)
 [![License](https://img.shields.io/badge/License-MIT-blue.svg?style=flat-square)](LICENSE)
 [![Tests](https://img.shields.io/github/actions/workflow/status/neev-kit/neev/tests.yml?branch=main&style=flat-square&label=Tests)](https://github.com/neev-kit/neev/actions/workflows/tests.yml)
 [![Release](https://img.shields.io/github/v/release/neev-kit/neev?style=flat-square&label=Release)](https://github.com/neev-kit/neev/releases/latest)
 
-**Document your architecture before you build it. Ship aligned code on first implementation.**
+**Unlike Spec-Kit:** Repo‑aware + polyrepo support  
+**Unlike OpenSpec:** Go CLI + drift detection  
+**No external APIs. No dependencies. All files versioned in git.**
 
-Neev is a spec-driven development framework that ensures **what you intend to build matches what you actually build**. It works by:
+## How It Works
 
 1. **Write blueprints** (markdown specs of features/components)
 2. **Aggregate context** (run `neev bridge` to get full project context)
 3. **Build with AI** (pass context to Claude, Cursor, Copilot for implementation)
 4. **Verify alignment** (run `neev inspect` to catch drift from specs)
 
-**No external APIs. No dependencies. All files versioned in your repository.**
-
-## The Problem Neev Solves
-
-❌ **Without specs**: Features get built differently than intended → rewrites → shipping late
-
-✅ **With Neev**: Specs are clear → implementation matches intent → ship on first attempt
-
-**Real benefit**: Teams ship aligned code faster because **thinking comes before typing**.
+**Real benefit**: Ship aligned code on first attempt because **specs drive decisions before you type**.
 
 ## 5-Minute Setup
 
