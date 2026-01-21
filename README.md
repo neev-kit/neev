@@ -28,31 +28,37 @@ Neev is a spec-driven development framework that ensures **what you intend to bu
 
 ### 1️⃣ Install
 
+**macOS (Apple Silicon):**
 ```bash
-# macOS (Intel)
-curl -L https://github.com/neev-kit/neev/releases/latest/download/neev_darwin_amd64.tar.gz | tar xz
-sudo mv neev /usr/local/bin/
+curl -sL $(curl -s https://api.github.com/repos/neev-kit/neev/releases/latest | grep -o '"browser_download_url": "[^"]*darwin_arm64[^"]*"' | cut -d'"' -f4) | tar xz && sudo mv neev_*/neev /usr/local/bin/ && rm -rf neev_*
+```
 
-# macOS (Apple Silicon)
-curl -L https://github.com/neev-kit/neev/releases/latest/download/neev_darwin_arm64.tar.gz | tar xz
-sudo mv neev /usr/local/bin/
+**macOS (Intel):**
+```bash
+curl -sL $(curl -s https://api.github.com/repos/neev-kit/neev/releases/latest | grep -o '"browser_download_url": "[^"]*darwin_amd64[^"]*"' | cut -d'"' -f4) | tar xz && sudo mv neev_*/neev /usr/local/bin/ && rm -rf neev_*
+```
 
-# Linux (x86_64)
-curl -L https://github.com/neev-kit/neev/releases/latest/download/neev_linux_amd64.tar.gz | tar xz
-sudo mv neev /usr/local/bin/
+**Linux (x86_64):**
+```bash
+curl -sL $(curl -s https://api.github.com/repos/neev-kit/neev/releases/latest | grep -o '"browser_download_url": "[^"]*linux_amd64[^"]*"' | cut -d'"' -f4) | tar xz && sudo mv neev_*/neev /usr/local/bin/ && rm -rf neev_*
+```
 
-# Windows (PowerShell)
-powershell -Command "
-  \$LatestRelease = (curl -s https://api.github.com/repos/neev-kit/neev/releases/latest).assets | Where-Object { \$_.name -like '*windows_amd64*' }
-  curl -Lo \$env:TEMP\neev.zip \$LatestRelease.browser_download_url
-  Expand-Archive \$env:TEMP\neev.zip -DestinationPath \$env:USERPROFILE\AppData\Local\Microsoft\WindowsApps
-  Remove-Item \$env:TEMP\neev.zip
-"
+**Windows (PowerShell):**
+```powershell
+$url = (curl -s https://api.github.com/repos/neev-kit/neev/releases/latest | Select-String 'windows_amd64.zip' -Raw) -replace '.*"browser_download_url": "([^"]+)".*', '$1'
+curl -Lo $env:TEMP\neev.zip $url
+Expand-Archive $env:TEMP\neev.zip -DestinationPath $env:TEMP\neev_extract
+Move-Item $env:TEMP\neev_extract\neev_*\neev.exe $env:USERPROFILE\AppData\Local\Microsoft\WindowsApps\neev.exe
+Remove-Item $env:TEMP\neev.zip, $env:TEMP\neev_extract -Recurse
+```
 
-# Windows (Winget)
-winget install neev-kit.neev
+**Homebrew (macOS/Linux):**
+```bash
+brew install neev-kit/tap/neev
+```
 
-# Or build from source
+**Build from source:**
+```bash
 git clone https://github.com/neev-kit/neev.git && cd neev
 go build -o neev ./cli && sudo mv neev /usr/local/bin/
 ```
