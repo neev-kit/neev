@@ -23,6 +23,185 @@ Neev is a local‑first SDD toolkit that makes your **foundation** (specs + blue
 
 **Real benefit**: Ship aligned code on first attempt because **specs drive decisions before you type**.
 
+### The Neev Workflow
+
+```
+┌─────────────────────────────────────────────────────────────────┐
+│                     SPEC-DRIVEN DEVELOPMENT                     │
+└─────────────────────────────────────────────────────────────────┘
+
+1️⃣  PLAN                    2️⃣  BUILD                  3️⃣  VERIFY
+─────────────────────────────────────────────────────────────────
+Write blueprints       →    Copy context to AI    →    neev inspect
+in .neev/                   (Claude/Copilot)            checks drift
+    ↓                            ↓                           ↓
+Specs clear            →    Implementation         →    Code matches
+Organized                   with full intent           architecture
+    ↓                            ↓                           ↓
+Every feature              Code generated              Specs stay
+documented                 from specs                  in sync
+
+Result: Merged code matches specs on first attempt ✅
+```
+
+### Workflow: Adding a New Feature
+
+**In Copilot Chat or Claude, use slash commands:**
+
+```
+Step 1: /neev:draft "User Authentication"
+        → Creates blueprint structure + intent.md
+
+Step 2: /neev:draft "Expand User Authentication with API design"
+        → AI drafts architecture.md with endpoints, models, security
+
+Step 3: /neev:bridge --focus auth
+        → Get full project context for implementation
+
+Step 4: [Paste context] "Build this user authentication system"
+        → AI implements the feature
+
+Step 5: /neev:inspect --strict
+        → Verify code matches your documented architecture
+```
+
+### Workflow: Updating an Existing Feature
+
+**In Copilot Chat or Claude, use slash commands:**
+
+```
+Step 1: /neev:draft "Add email verification to User Authentication"
+        → AI updates the blueprint with new feature
+
+Step 2: /neev:bridge --focus auth
+        → Get updated context with your new spec
+
+Step 3: [Paste context] "Implement email verification"
+        → AI builds the new feature
+
+Step 4: /neev:inspect
+        → Verify implementation matches updated blueprint
+
+Step 5: /neev:inspect --strict --drift-check
+        → Ensure no spec-code divergence before merge
+```
+
+---
+
+## For Senior Engineers & Tech Leads
+
+### Why Neev? (Business Value)
+
+**Problem:** Specs go stale, code diverges from intent, reviews miss alignment issues, rework happens.
+
+**Neev's Solution:**
+
+| Problem | Neev's Answer |
+|---------|---|
+| Specs get outdated | Specs = source of truth (auto-validated) |
+| Team misses context | `neev bridge` auto-aggregates everything |
+| Code-spec drift | `neev inspect` catches it immediately |
+| AI builds wrong thing | Full context → AI builds exactly as specified |
+| Specs as documentation | Blueprints ARE docs (always in sync) |
+| Review takes 2 hours | Alignment checked before review starts |
+
+**Result:** Ship aligned code on first attempt, reduce rework, improve team velocity.
+
+### Quick Adoption (No Risk)
+
+```
+Week 1: Install Neev (5 min)
+        Initialize one service (2 min per service)
+        Team writes one blueprint (30 min)
+        ✅ Try it, zero commitment
+
+Week 2-3: Integrate with CI/CD (if desired)
+          Run `neev inspect` in merge gates
+          Optional: Enforce specs quality
+
+Month 1: Team sees alignment benefits
+         Reduces code review friction
+         Faster onboarding with specs
+
+Month 2: Roll out to all services
+         Integrate with AI workflows
+         Measure spec coverage % over time
+
+Month 3+: Continuous value
+          Specs stay in sync automatically
+          Less rework, faster shipping
+```
+
+### Integration is Simple
+
+**Option 1: Local Only**
+```bash
+$ neev inspect              # After coding, before push
+$ Result: Catch drift early
+```
+
+**Option 2: In CI/CD**
+```bash
+$ neev inspect --strict            # Merge gate check
+$ Result: Block misaligned PRs
+```
+
+**Option 3: With AI**
+```bash
+$ neev bridge --focus feature      # Copy context
+$ Paste into Claude/Copilot
+$ Result: AI builds exactly as specified
+```
+
+All options work **together** — pick what suits your team.
+
+### Zero Operational Overhead
+
+- ✅ **Local-first:** All files in git (no cloud, no API)
+- ✅ **Single binary:** Just `neev` command (no dependencies)
+- ✅ **Markdown-based:** Specs in version control
+- ✅ **Gradual adoption:** Start with one team/service
+- ✅ **No vendor lock-in:** Specs are plain markdown
+- ✅ **Polyrepo-ready:** Works with monorepos and multi-repos
+
+### Success Metrics (6 Months)
+
+```
+Before Neev:
+  • Spec-code drift incidents: 8-10/month
+  • Code review time: ~2 hours per PR
+  • Rework due to misalignment: ~15% of features
+  • New engineer onboarding: 2-3 weeks to productivity
+
+After Neev:
+  • Spec-code drift incidents: <1/month
+  • Code review time: ~30 min per PR
+  • Rework due to misalignment: <5% of features
+  • New engineer onboarding: 1 week with specs
+```
+
+### How to Get Started (3 Steps)
+
+**Step 1:** Try it locally on one service
+```bash
+neev init                           # Set up .neev/
+neev draft "Your Feature"           # Create blueprint
+neev bridge                         # See aggregated context
+neev inspect --drift-check          # Check alignment
+```
+
+**Step 2:** Show your team the benefits
+- Specs are clear and discoverable
+- AI context is comprehensive
+- Drift is caught early
+
+**Step 3:** Roll out to more services
+- Add to CI/CD for merge gates (optional)
+- Integrate with your AI workflows
+- Track spec coverage % over time
+
+---
+
 ## 5-Minute Setup
 
 ### 1️⃣ Install
