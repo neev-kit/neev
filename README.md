@@ -8,6 +8,7 @@ Neev is a local‑first SDD toolkit that makes your **foundation** (specs + blue
 [![License](https://img.shields.io/badge/License-MIT-blue.svg?style=flat-square)](LICENSE)
 [![Tests](https://img.shields.io/github/actions/workflow/status/neev-kit/neev/tests.yml?branch=main&style=flat-square&label=Tests)](https://github.com/neev-kit/neev/actions/workflows/tests.yml)
 [![Release](https://img.shields.io/github/v/release/neev-kit/neev?style=flat-square&label=Release)](https://github.com/neev-kit/neev/releases/latest)
+[![SDD Certified](https://img.shields.io/badge/SDD-Spec--Driven%20Development-9b59b6?style=flat-square)](https://github.com/neev-kit/neev)
 
 **Unlike Spec-Kit:** Repo‑aware + polyrepo support  
 **Unlike OpenSpec:** Go CLI + drift detection  
