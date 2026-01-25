@@ -59,32 +59,35 @@ func (d *RubyDetector) ExtractEndpoints(filePath string, content []byte) ([]Endp
 				// Handle resources shorthand
 				if strings.Contains(trimmedLine, "resources") {
 					// Rails resources create standard RESTful routes
-					resource := matches[1]
-					// We'll just record the basic ones
-					restMethods := []struct {
-						method string
-						path   string
-						action string
-					}{
-						{"GET", "/" + resource, "index"},
-						{"POST", "/" + resource, "create"},
-						{"GET", "/" + resource + "/:id", "show"},
-						{"PUT", "/" + resource + "/:id", "update"},
-						{"DELETE", "/" + resource + "/:id", "destroy"},
-					}
-					
-					for _, rm := range restMethods {
-						endpoint := Endpoint{
-							Method:   rm.method,
-							Path:     rm.path,
-							Handler:  resource + "#" + rm.action,
-							File:     filePath,
-							Line:     lineNum + 1,
-							Language: string(LangRuby),
+					resourceMatch := regexp.MustCompile(`resources\s+:(\w+)`).FindStringSubmatch(trimmedLine)
+					if resourceMatch != nil {
+						resource := resourceMatch[1]
+						// We'll just record the basic ones
+						restMethods := []struct {
+							method string
+							path   string
+							action string
+						}{
+							{"GET", "/" + resource, "index"},
+							{"POST", "/" + resource, "create"},
+							{"GET", "/" + resource + "/:id", "show"},
+							{"PUT", "/" + resource + "/:id", "update"},
+							{"DELETE", "/" + resource + "/:id", "destroy"},
 						}
-						endpoints = append(endpoints, endpoint)
+						
+						for _, rm := range restMethods {
+							endpoint := Endpoint{
+								Method:   rm.method,
+								Path:     rm.path,
+								Handler:  resource + "#" + rm.action,
+								File:     filePath,
+								Line:     lineNum + 1,
+								Language: string(LangRuby),
+							}
+							endpoints = append(endpoints, endpoint)
+						}
+						continue
 					}
-					continue
 				}
 				
 				endpoint := Endpoint{

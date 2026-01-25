@@ -114,7 +114,7 @@ func (d *JavaDetector) ExtractFunctions(filePath string, content []byte) ([]Func
 	lines := strings.Split(contentStr, "\n")
 	
 	// Pattern: public ReturnType methodName(params)
-	funcPattern := regexp.MustCompile(`^\s*(public|private|protected)?\s+(?:static\s+)?(?:final\s+)?(\w+(?:<[^>]+>)?)\s+([a-zA-Z_]\w*)\s*\((.*?)\)`)
+	funcPattern := regexp.MustCompile(`^\s*(public|private|protected)?\s+(?:static\s+)?(?:final\s+)?(?:abstract\s+)?(\w+(?:<[^>]+>)?)\s+([a-zA-Z_]\w*)\s*\((.*?)\)`)
 	
 	for lineNum, line := range lines {
 		matches := funcPattern.FindStringSubmatch(line)

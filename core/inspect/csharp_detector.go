@@ -96,7 +96,7 @@ func (d *CSharpDetector) ExtractFunctions(filePath string, content []byte) ([]Fu
 	lines := strings.Split(contentStr, "\n")
 	
 	// Pattern: public ReturnType MethodName(params)
-	funcPattern := regexp.MustCompile(`^\s*(public|private|protected|internal)?\s+(?:static\s+)?(?:async\s+)?(?:virtual\s+)?(?:override\s+)?(Task<\w+>|\w+(?:<[^>]+>)?)\s+([A-Z]\w*)\s*\((.*?)\)`)
+	funcPattern := regexp.MustCompile(`^\s*(public|private|protected|internal)?\s+(?:static\s+)?(?:async\s+)?(?:virtual\s+)?(?:override\s+)?(Task<\w+>|\w+(?:<[^>]+>)?)\s+([a-zA-Z_]\w*)\s*\((.*?)\)`)
 	
 	for lineNum, line := range lines {
 		matches := funcPattern.FindStringSubmatch(line)

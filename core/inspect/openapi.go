@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+	"regexp"
 	"strings"
 
 	"github.com/neev-kit/neev/core/openapi"
@@ -195,7 +196,12 @@ func normalizePath(path string) string {
 	// Normalize path parameters
 	// /api/users/:id -> /api/users/{id}
 	// /api/users/<id> -> /api/users/{id}
-	path = strings.ReplaceAll(path, ":", "")
+	
+	// Replace colon-style parameters with braces
+	colonPattern := regexp.MustCompile(`:(\w+)`)
+	path = colonPattern.ReplaceAllString(path, "{$1}")
+	
+	// Replace angle-bracket parameters with braces
 	path = strings.ReplaceAll(path, "<", "{")
 	path = strings.ReplaceAll(path, ">", "}")
 	
