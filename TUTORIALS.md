@@ -12,6 +12,7 @@ Step-by-step tutorials for common Neev use cases. Each tutorial is self-containe
 6. [Tutorial 6: Using Neev with GitHub Copilot](#tutorial-6-using-neev-with-github-copilot)
 7. [Tutorial 7: Migration from Existing Documentation](#tutorial-7-migration-from-existing-documentation)
 8. [Tutorial 8: Database Schema Evolution](#tutorial-8-database-schema-evolution)
+9. [Tutorial 9: Polyglot Drift Detection](#tutorial-9-polyglot-drift-detection)
 
 ---
 
@@ -1985,6 +1986,237 @@ neev lay "Schema Migration v2"
 - ✅ Migration and rollback scripts
 - ✅ Version history
 - ✅ AI-ready context for schema work
+
+---
+
+## Tutorial 9: Polyglot Drift Detection
+
+**Goal:** Use Neev's multi-language drift detection to verify that your code implementation matches specifications.
+
+**Time:** 15 minutes
+
+### Prerequisites
+
+- Neev installed with the enhanced inspect command
+- A project with multiple programming languages
+- OpenAPI specifications or ARCHITECTURE.md with API endpoints
+
+### Step 1: Basic Structure Check (Level 1)
+
+Run a basic inspection to detect languages and verify structure:
+
+```bash
+neev inspect
+```
+
+**Output:**
+```
+🔍 POLYGLOT DRIFT DETECTION
+
+═════ LANGUAGES DETECTED =====
+Go (23 files) | Python (5 files) | JavaScript (12 files)
+
+═════ LEVEL 1: STRUCTURE =====
+✅ Modules: 12/12 matching
+⚠️  Extra: utils/ (undocumented)
+
+📊 Summary:
+  Total modules: 12
+  Matching: 11
+  Missing: 0
+  Extra code dirs: 1
+```
+
+### Step 2: API Contract Validation (Level 2)
+
+Verify that all documented API endpoints are implemented:
+
+```bash
+neev inspect --check-api
+# or
+neev inspect --depth 2
+```
+
+**Output:**
+```
+═════ LEVEL 2: API CONTRACTS =====
+[Go]
+  ✅ GET /api/users → ListUsers handler found
+  ✅ POST /api/users → CreateUser handler found
+  🔴 DELETE /api/users/{id} → NO HANDLER (documented)
+
+[Python]
+  ✅ GET /api/posts → list_posts handler found
+  ⚠️  POST /api/admin → NO DOCS (implemented)
+```
+
+This shows you:
+- ✅ **Green**: Endpoint is both documented and implemented
+- 🔴 **Red**: Endpoint is documented but NOT implemented (error)
+- ⚠️  **Yellow**: Endpoint is implemented but NOT documented (warning)
+
+### Step 3: Function Signature Validation (Level 3)
+
+Create a module descriptor to specify expected function signatures:
+
+```bash
+# Create .neev/foundation/api.module.yaml
+cat > .neev/foundation/api.module.yaml << 'EOF'
+name: api
+description: REST API handlers
+expected_functions:
+  - name: ListUsers
+    language: go
+    file_pattern: "handlers/*.go"
+    parameters:
+      - name: w
+        type: "http.ResponseWriter"
+      - name: r
+        type: "*http.Request"
+    returns:
+      - type: error
+    visibility: public
+    
+  - name: CreateUser
+    language: go
+    parameters:
+      - name: ctx
+        type: context.Context
+      - name: user
+        type: "*User"
+    returns:
+      - type: "*User"
+      - type: error
+    visibility: public
+EOF
+```
+
+Run signature validation:
+
+```bash
+neev inspect --check-signatures --use-descriptors
+# or
+neev inspect --depth 3 --use-descriptors
+```
+
+**Output:**
+```
+═════ LEVEL 3: SIGNATURES =====
+[Go]
+  ✅ ListUsers(w http.ResponseWriter, r *http.Request) error → Matches
+  ⚠️  CreateUser(ctx context.Context, user *User, logger Logger) (*User, error)
+      → Extra parameter 'logger' (undocumented)
+      💡 Update module descriptor or remove parameter
+```
+
+### Step 4: CI/CD Integration
+
+Add drift detection to your CI pipeline:
+
+```bash
+# .github/workflows/drift-check.yml
+name: Drift Detection
+on: [pull_request]
+
+jobs:
+  drift-check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - name: Install Neev
+        run: |
+          curl -sfL https://raw.githubusercontent.com/neev-kit/neev/main/install.sh | sh
+      - name: Check for drift
+        run: |
+          neev inspect --strict --check-api --json > drift-report.json
+      - name: Upload drift report
+        if: failure()
+        uses: actions/upload-artifact@v3
+        with:
+          name: drift-report
+          path: drift-report.json
+```
+
+### Step 5: Multi-Language Support
+
+Neev automatically detects and validates code in:
+
+**Supported Frameworks:**
+- **Go**: Gin, Echo, Fiber, Chi, net/http
+- **Python**: Flask, FastAPI, Django
+- **JavaScript/TypeScript**: Express, Fastify, Koa
+- **Java**: Spring Boot
+- **C#**: ASP.NET Core
+- **Ruby**: Rails, Sinatra
+
+**Example with Python Flask:**
+
+```python
+# app.py
+from flask import Flask, jsonify
+
+app = Flask(__name__)
+
+@app.get("/api/users")
+def list_users():
+    return jsonify([])
+
+@app.post("/api/users")
+def create_user():
+    return jsonify({}), 201
+```
+
+Running `neev inspect --check-api` will automatically detect these endpoints!
+
+### Step 6: JSON Output for Automation
+
+Get structured output for CI/CD or custom tooling:
+
+```bash
+neev inspect --depth 3 --json
+```
+
+**Output:**
+```json
+{
+  "success": false,
+  "warnings": [
+    {
+      "type": "MISSING_ENDPOINT",
+      "module": "api",
+      "message": "API endpoint DELETE /api/users/{id} is documented but not implemented",
+      "severity": "error",
+      "remediation": "Implement handler for DELETE /api/users/{id}"
+    }
+  ],
+  "summary": {
+    "languages": {
+      "go": 23,
+      "python": 5,
+      "javascript": 12
+    },
+    "missing_endpoints": 1,
+    "undocumented_endpoints": 1,
+    "signature_mismatches": 1
+  }
+}
+```
+
+### Best Practices
+
+1. **Start with Level 1**: Always run basic structure checks first
+2. **Add Level 2 in CI**: Catch API contract drift early
+3. **Use Level 3 for Critical APIs**: Validate signatures for public APIs
+4. **Document in module.yaml**: Keep function specs close to foundation docs
+5. **Run before commits**: Use pre-commit hooks for fast feedback
+
+### Result
+
+- ✅ Multi-language drift detection
+- ✅ API contract validation
+- ✅ Function signature verification
+- ✅ CI/CD integration ready
+- ✅ Automated spec-to-code validation
 
 ---
 

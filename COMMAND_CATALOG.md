@@ -11,7 +11,7 @@ Neev provides 14 commands organized into 4 categories:
 | Category | Commands | Purpose |
 |----------|----------|---------|
 | **Foundation** | init, lay | Set up and manage project structure |
-| **Blueprints** | draft, bridge, inspect | Create and organize blueprints |
+| **Blueprints** | draft, bridge, inspect | Create and organize blueprints with polyglot drift detection |
 | **Generation** | openapi, cucumber, handoff, instructions | Generate specifications and outputs |
 | **Integration** | slash-commands, migrate, sync-remotes | AI tool integration and migration |
 | **System** | completion, help | Shell integration and help |
@@ -196,45 +196,165 @@ Run before asking AI agents for implementation. Pass the output to Claude, ChatG
 
 ### neev inspect
 
-**Check project structure against foundation specifications**
+**Check project structure against foundation specifications with multi-language drift detection**
 
 ```bash
 neev inspect [flags]
 ```
 
 **Description:**
-Analyzes the project structure and verifies it matches the foundation specifications. Detects drift between specifications and implementation.
+Analyzes the project structure and verifies it matches the foundation specifications. Detects drift between specifications and implementation across multiple programming languages. Supports three levels of analysis:
+
+- **Level 1**: Directory/file structure checking (default)
+- **Level 2**: OpenAPI contract validation (checks API endpoints)
+- **Level 3**: Function signature validation (checks method signatures)
+
+**Supported Languages:**
+- Go (.go)
+- Python (.py) 
+- JavaScript/TypeScript (.js, .ts, .jsx, .tsx)
+- Java (.java)
+- C# (.cs)
+- Ruby (.rb)
 
 **Flags:**
 - `--json` - Output results in JSON format
 - `--strict` - Exit with code 1 if any drift is detected (for CI pipelines)
 - `--use-descriptors` - Use `.module.yaml` files for detailed inspection
+- `--depth int` - Depth of analysis: 1=structure, 2=+API, 3=+signatures (default: 1)
+- `--check-api` - Validate OpenAPI specs (enables Level 2)
+- `--check-signatures` - Validate function signatures (enables Level 3)
+- `--check-tests` - Validate BDD test coverage (not yet implemented)
 
 **Examples:**
 ```bash
-# Check for specification drift
+# Basic structure check (Level 1)
 neev inspect
 
 # Output
-🔍 Analyzing project structure...
-✅ Project structure matches specifications
+🔍 POLYGLOT DRIFT DETECTION
+
+═════ LANGUAGES DETECTED =====
+Go (23 files) | Python (5 files) | JavaScript (12 files)
+
+═════ LEVEL 1: STRUCTURE =====
+✅ Modules: 12/12 matching
+⚠️  Extra: utils/ (undocumented)
+
+# Check API contracts (Level 2)
+neev inspect --check-api
+# or
+neev inspect --depth 2
+
+# Output includes
+═════ LEVEL 2: API CONTRACTS =====
+[Go]
+  ✅ GET /api/users → ListUsers handler found
+  🔴 DELETE /api/users/{id} → NO HANDLER (documented)
+
+[Python]
+  ✅ POST /api/users → create_user handler found
+
+# Full validation including signatures (Level 3)
+neev inspect --depth 3
+# or
+neev inspect --check-signatures
+
+# Output includes
+═════ LEVEL 3: SIGNATURES =====
+[Go]
+  ✅ ListUsers(w http.ResponseWriter, r *http.Request) → Matches
+  ⚠️  CreateUser(..., Logger logger) → Extra parameter (undocumented)
 
 # Get JSON output for parsing
-neev inspect --json
+neev inspect --json --depth 3
 
 # Fail if any drift is detected (useful in CI/CD)
-neev inspect --strict
+neev inspect --strict --check-api
 
 # Use detailed module descriptors
 neev inspect --use-descriptors
 ```
 
-**Output:**
-- Human-readable: Status report showing matches/mismatches
-- JSON: Structured results with drift details
+**Output Structure:**
+- **Human-readable**: 
+  - Language breakdown showing file counts
+  - Grouped warnings by severity (error/warning/info)
+  - Detailed remediation suggestions
+  - Summary statistics by analysis level
 
-**Use Case:**
-Verify that your implementation follows the specifications in your blueprints. Use `--strict` in CI/CD pipelines.
+- **JSON**: 
+```json
+{
+  "success": false,
+  "warnings": [
+    {
+      "type": "MISSING_ENDPOINT",
+      "module": "api",
+      "message": "API endpoint DELETE /api/users/{id} is documented but not implemented",
+      "severity": "error",
+      "remediation": "Implement handler for DELETE /api/users/{id}"
+    }
+  ],
+  "summary": {
+    "total_modules": 12,
+    "matching_modules": 11,
+    "missing_modules": 0,
+    "extra_code_dirs": 1,
+    "languages": {
+      "go": 23,
+      "python": 5,
+      "javascript": 12
+    },
+    "missing_endpoints": 1,
+    "undocumented_endpoints": 0,
+    "signature_mismatches": 1,
+    "total_warnings": 3,
+    "error_count": 1,
+    "warning_count": 2
+  }
+}
+```
+
+**Module Descriptor Example (`.module.yaml`):**
+```yaml
+name: api
+description: REST API handlers
+expected_functions:
+  - name: ListUsers
+    language: go
+    file_pattern: "handlers/*.go"
+    parameters:
+      - name: w
+        type: "http.ResponseWriter"
+      - name: r
+        type: "*http.Request"
+    returns:
+      - type: error
+    visibility: public
+    
+  - name: CreateUser
+    language: go
+    parameters:
+      - name: ctx
+        type: context.Context
+      - name: user
+        type: "*User"
+    returns:
+      - type: "*User"
+      - type: error
+```
+
+**Use Cases:**
+1. **CI/CD Integration**: Run `neev inspect --strict --check-api` to fail builds on drift
+2. **API Contract Testing**: Use `--check-api` to verify all documented endpoints are implemented
+3. **Signature Validation**: Use `--check-signatures` to ensure function signatures match specs
+4. **Polyglot Projects**: Automatically detects and validates code in 6+ languages
+5. **Refactoring Safety**: Verify changes don't break documented interfaces
+
+**Exit Codes:**
+- `0` - No drift detected (or only warnings in non-strict mode)
+- `1` - Drift detected with `--strict` flag
 
 ---
 
