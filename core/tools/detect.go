@@ -38,7 +38,7 @@ type Tool struct {
 
 // DetectInstalledTools detects all installed AI tools on the system
 func DetectInstalledTools() []Tool {
-	var tools []Tool
+	tools := make([]Tool, 0)
 
 	// Detect each tool
 	if tool := detectCursor(); tool.Installed {
