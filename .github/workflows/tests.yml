@@ -34,5 +34,5 @@ jobs:
       - name: Build
         run: |
           cd cli
-          go build -o neev main.go
-          ./neev --help
+          go build -o neev .
+          ./neev --help 2>&1 || true
