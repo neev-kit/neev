@@ -1,3 +1,5 @@
 .neev/
 *.exe
 /cli/neev
+cli/neev-test
+coverage.out

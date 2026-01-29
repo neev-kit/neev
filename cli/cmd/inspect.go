@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+	"strings"
 
 	"github.com/charmbracelet/lipgloss"
 	"github.com/neev-kit/neev/core/config"
@@ -14,9 +15,13 @@ import (
 )
 
 var (
-	jsonOutput     bool
-	useDescriptors bool
-	strictMode     bool
+	jsonOutput      bool
+	useDescriptors  bool
+	strictMode      bool
+	depth           int
+	checkAPI        bool
+	checkSignatures bool
+	checkTests      bool
 )
 
 var inspectCmd = &cobra.Command{
@@ -38,14 +43,17 @@ var inspectCmd = &cobra.Command{
 		}
 
 		// Use new structured inspect if descriptors are enabled or JSON output requested
-		if useDescriptors || jsonOutput {
+		if useDescriptors || jsonOutput || depth > 1 || checkAPI || checkSignatures {
 			foundationPath := filepath.Join(cwd, ".neev", "foundation")
 
 			opts := inspect.InspectOptions{
-				RootDir:        cwd,
-				FoundationPath: foundationPath,
-				IgnoreDirs:     cfg.GetIgnoreDirs(),
-				UseDescriptors: useDescriptors,
+				RootDir:         cwd,
+				FoundationPath:  foundationPath,
+				IgnoreDirs:      cfg.GetIgnoreDirs(),
+				UseDescriptors:  useDescriptors,
+				Depth:           depth,
+				CheckAPI:        checkAPI,
+				CheckSignatures: checkSignatures,
 			}
 
 			result, err := inspect.Inspect(opts)
@@ -135,6 +143,18 @@ func printStructuredResult(result *inspect.InspectResult) {
 
 		fmt.Println(successStyle.Render("✅ Foundation is solid."))
 		fmt.Println()
+		
+		// Print language breakdown if available
+		if len(result.Summary.Languages) > 0 {
+			fmt.Print("🔍 LANGUAGES DETECTED: ")
+			var langs []string
+			for lang, count := range result.Summary.Languages {
+				langs = append(langs, fmt.Sprintf("%s (%d files)", lang, count))
+			}
+			fmt.Println(strings.Join(langs, " | "))
+			fmt.Println()
+		}
+		
 		fmt.Printf("📊 Summary: %d modules checked, all in sync\n", result.Summary.TotalModules)
 		return
 	}
@@ -146,6 +166,17 @@ func printStructuredResult(result *inspect.InspectResult) {
 
 	fmt.Println(titleStyle.Render("⚠️  Foundation drift detected:"))
 	fmt.Println()
+	
+	// Print language breakdown if available
+	if len(result.Summary.Languages) > 0 {
+		fmt.Println("═════ LANGUAGES DETECTED =====")
+		var langs []string
+		for lang, count := range result.Summary.Languages {
+			langs = append(langs, fmt.Sprintf("%s (%d files)", lang, count))
+		}
+		fmt.Println(strings.Join(langs, " | "))
+		fmt.Println()
+	}
 
 	// Group warnings by severity
 	errors := []inspect.Warning{}
@@ -211,6 +242,18 @@ func printStructuredResult(result *inspect.InspectResult) {
 	fmt.Printf("  Matching: %d\n", result.Summary.MatchingModules)
 	fmt.Printf("  Missing: %d\n", result.Summary.MissingModules)
 	fmt.Printf("  Extra code dirs: %d\n", result.Summary.ExtraCodeDirs)
+	
+	// Print API contract summary if applicable
+	if result.Summary.MissingEndpoints > 0 || result.Summary.UndocumentedEnds > 0 {
+		fmt.Printf("  Missing endpoints: %d\n", result.Summary.MissingEndpoints)
+		fmt.Printf("  Undocumented endpoints: %d\n", result.Summary.UndocumentedEnds)
+	}
+	
+	// Print signature mismatch summary if applicable
+	if result.Summary.SignatureMismatches > 0 {
+		fmt.Printf("  Signature mismatches: %d\n", result.Summary.SignatureMismatches)
+	}
+	
 	fmt.Printf("  Total warnings: %d (errors: %d, warnings: %d)\n",
 		result.Summary.TotalWarnings, result.Summary.ErrorCount, result.Summary.WarningCount)
 }
@@ -220,4 +263,8 @@ func init() {
 	inspectCmd.Flags().BoolVar(&jsonOutput, "json", false, "Output results in JSON format")
 	inspectCmd.Flags().BoolVar(&useDescriptors, "use-descriptors", false, "Use .module.yaml files for detailed inspection")
 	inspectCmd.Flags().BoolVar(&strictMode, "strict", false, "Exit with code 1 if any drift is detected (for CI pipelines)")
+	inspectCmd.Flags().IntVar(&depth, "depth", 1, "Depth of analysis (1=structure, 2=+API, 3=+signatures)")
+	inspectCmd.Flags().BoolVar(&checkAPI, "check-api", false, "Validate OpenAPI specs (enables Level 2)")
+	inspectCmd.Flags().BoolVar(&checkSignatures, "check-signatures", false, "Validate function signatures (enables Level 3)")
+	inspectCmd.Flags().BoolVar(&checkTests, "check-tests", false, "Validate BDD test coverage (not yet implemented)")
 }

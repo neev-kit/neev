@@ -15,6 +15,9 @@ type InspectOptions struct {
 	FoundationPath string
 	IgnoreDirs     map[string]bool
 	UseDescriptors bool // If true, use .module.yaml files for detailed inspection
+	Depth          int  // Analysis depth: 1=structure, 2=+API, 3=+signatures
+	CheckAPI       bool // Enable OpenAPI validation (Level 2)
+	CheckSignatures bool // Enable signature validation (Level 3)
 }
 
 // Inspect performs drift detection between foundation specs and code structure
@@ -22,8 +25,35 @@ func Inspect(opts InspectOptions) (*InspectResult, error) {
 	result := &InspectResult{
 		Success:  true,
 		Warnings: []Warning{},
-		Summary:  Summary{},
+		Summary:  Summary{
+			Languages: make(map[string]int),
+		},
 	}
+
+	// Initialize polyglot analyzer
+	analyzer := NewPolyglotAnalyzer()
+	
+	// Import detector types properly
+	goDetector := &GoDetector{}
+	pyDetector := &PythonDetector{}
+	jsDetector := &JavaScriptDetector{}
+	javaDetector := &JavaDetector{}
+	csDetector := &CSharpDetector{}
+	rbDetector := &RubyDetector{}
+	
+	analyzer.RegisterDetector(goDetector)
+	analyzer.RegisterDetector(pyDetector)
+	analyzer.RegisterDetector(jsDetector)
+	analyzer.RegisterDetector(javaDetector)
+	analyzer.RegisterDetector(csDetector)
+	analyzer.RegisterDetector(rbDetector)
+
+	// Detect languages in the codebase
+	languages, err := analyzer.DetectLanguages(opts.RootDir, opts.IgnoreDirs)
+	if err != nil {
+		return nil, fmt.Errorf("failed to detect languages: %w", err)
+	}
+	result.Summary.Languages = languages
 
 	// Get foundation modules
 	foundationModules, descriptors, err := getFoundationModules(opts.FoundationPath, opts.UseDescriptors)
@@ -85,6 +115,50 @@ func Inspect(opts InspectOptions) (*InspectResult, error) {
 			result.Warnings = append(result.Warnings, warning)
 			result.Summary.ExtraCodeDirs++
 			result.Summary.WarningCount++
+		}
+	}
+
+	// Level 2: OpenAPI validation (if enabled)
+	if opts.CheckAPI || opts.Depth >= 2 {
+		apiWarnings, err := ValidateOpenAPIContracts(opts, analyzer)
+		if err != nil {
+			return nil, fmt.Errorf("failed to validate API contracts: %w", err)
+		}
+		
+		for _, w := range apiWarnings {
+			result.Warnings = append(result.Warnings, w)
+			if w.Type == WarningMissingEndpoint {
+				result.Summary.MissingEndpoints++
+			} else if w.Type == WarningUndocumentedEndpoint {
+				result.Summary.UndocumentedEnds++
+			}
+			
+			if w.Severity == "error" {
+				result.Summary.ErrorCount++
+			} else {
+				result.Summary.WarningCount++
+			}
+		}
+	}
+
+	// Level 3: Function signature validation (if enabled)
+	if opts.CheckSignatures || opts.Depth >= 3 {
+		sigWarnings, err := ValidateFunctionSignatures(opts, analyzer)
+		if err != nil {
+			return nil, fmt.Errorf("failed to validate function signatures: %w", err)
+		}
+		
+		for _, w := range sigWarnings {
+			result.Warnings = append(result.Warnings, w)
+			if w.Type == WarningSignatureMismatch {
+				result.Summary.SignatureMismatches++
+			}
+			
+			if w.Severity == "error" {
+				result.Summary.ErrorCount++
+			} else {
+				result.Summary.WarningCount++
+			}
 		}
 	}
 
