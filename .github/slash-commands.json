@@ -1,0 +1,67 @@
+{
+  "version": "1.0.0",
+  "project_name": "neev",
+  "description": "Neev slash commands for spec-driven development with GitHub Copilot Chat",
+  "commands": {
+    "neev:bridge": {
+      "name": "bridge",
+      "description": "Generate aggregated project context for AI",
+      "prompt": "Generate the project context for me to review",
+      "aliases": [
+        "bridge"
+      ],
+      "context": "Use this command when you need to generate aggregated project context for ai",
+      "icon": "🌉"
+    },
+    "neev:cucumber": {
+      "name": "cucumber",
+      "description": "Generate Cucumber/BDD test scaffolding",
+      "prompt": "Generate Cucumber tests for this API",
+      "aliases": [
+        "cucumber"
+      ],
+      "context": "Use this command when you need to generate cucumber/bdd test scaffolding",
+      "icon": "🥒"
+    },
+    "neev:draft": {
+      "name": "draft",
+      "description": "Create a new blueprint",
+      "prompt": "Create a new blueprint for this feature",
+      "aliases": [
+        "draft"
+      ],
+      "context": "Use this command when you need to create a new blueprint",
+      "icon": "📋"
+    },
+    "neev:handoff": {
+      "name": "handoff",
+      "description": "Format context for AI handoff",
+      "prompt": "Prepare the context for handoff to an AI agent",
+      "aliases": [
+        "handoff"
+      ],
+      "context": "Use this command when you need to format context for ai handoff",
+      "icon": "🤝"
+    },
+    "neev:inspect": {
+      "name": "inspect",
+      "description": "Analyze project structure and find gaps",
+      "prompt": "Analyze the project structure and show me any gaps",
+      "aliases": [
+        "inspect"
+      ],
+      "context": "Use this command when you need to analyze project structure and find gaps",
+      "icon": "🔍"
+    },
+    "neev:openapi": {
+      "name": "openapi",
+      "description": "Generate OpenAPI specification",
+      "prompt": "Generate an OpenAPI specification for this blueprint",
+      "aliases": [
+        "openapi"
+      ],
+      "context": "Use this command when you need to generate openapi specification",
+      "icon": "📖"
+    }
+  }
+}

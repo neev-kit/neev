@@ -6,6 +6,7 @@ import (
 	"path/filepath"
 
 	"github.com/neev-kit/neev/core/commands"
+	"github.com/neev-kit/neev/core/slash"
 	"gopkg.in/yaml.v3"
 )
 
@@ -83,6 +84,32 @@ func Initialize(cwd string) error {
 	slashCommandPath := filepath.Join(cwd, ".github", "slash-commands.json")
 	if err := os.WriteFile(slashCommandPath, []byte(slashCommandManifest), 0644); err != nil {
 		return fmt.Errorf("failed to write slash command manifest: %w", err)
+	}
+
+	// Generate GitHub Copilot prompt files
+	copilotPrompts := slash.GenerateGitHubCopilotPrompts(projectName)
+	copilotPromptsBasePath := filepath.Join(cwd, ".github", "prompts", "neev")
+	if err := os.MkdirAll(copilotPromptsBasePath, 0755); err != nil {
+		return fmt.Errorf("failed to create .github/prompts/neev directory: %w", err)
+	}
+	for fileName, content := range copilotPrompts {
+		filePath := filepath.Join(copilotPromptsBasePath, fileName)
+		if err := os.WriteFile(filePath, []byte(content), 0644); err != nil {
+			return fmt.Errorf("failed to write GitHub Copilot prompt file %s: %w", fileName, err)
+		}
+	}
+
+	// Generate Claude Code slash command files
+	claudeCommands := slash.GenerateClaudeSlashCommands(projectName)
+	claudeBasePath := filepath.Join(cwd, ".claude", "commands", "neev")
+	if err := os.MkdirAll(claudeBasePath, 0755); err != nil {
+		return fmt.Errorf("failed to create .claude/commands/neev directory: %w", err)
+	}
+	for fileName, content := range claudeCommands {
+		filePath := filepath.Join(claudeBasePath, fileName)
+		if err := os.WriteFile(filePath, []byte(content), 0644); err != nil {
+			return fmt.Errorf("failed to write Claude command file %s: %w", fileName, err)
+		}
 	}
 
 	// Create default neev.yaml

@@ -62,6 +62,36 @@ var initCmd = &cobra.Command{
 			}
 		}
 
+		// Generate GitHub Copilot prompt files
+		copilotPrompts := slash.GenerateGitHubCopilotPrompts(projectName)
+		copilotPromptsBasePath := filepath.Join(cwd, ".github", "prompts", "neev")
+		if err := os.MkdirAll(copilotPromptsBasePath, 0755); err != nil {
+			fmt.Printf("Warning: Failed to create .github/prompts/neev directory: %v\n", err)
+		} else {
+			for fileName, content := range copilotPrompts {
+				filePath := filepath.Join(copilotPromptsBasePath, fileName)
+				if err := os.WriteFile(filePath, []byte(content), 0644); err != nil {
+					fmt.Printf("Warning: Failed to write GitHub Copilot prompt file %s: %v\n", fileName, err)
+				}
+			}
+			fmt.Println("📝 Generated prompt files for GitHub Copilot")
+		}
+
+		// Generate Claude Code slash command files
+		claudeCommands := slash.GenerateClaudeSlashCommands(projectName)
+		claudeBasePath := filepath.Join(cwd, ".claude", "commands", "neev")
+		if err := os.MkdirAll(claudeBasePath, 0755); err != nil {
+			fmt.Printf("Warning: Failed to create .claude/commands/neev directory: %v\n", err)
+		} else {
+			for fileName, content := range claudeCommands {
+				filePath := filepath.Join(claudeBasePath, fileName)
+				if err := os.WriteFile(filePath, []byte(content), 0644); err != nil {
+					fmt.Printf("Warning: Failed to write Claude command file %s: %v\n", fileName, err)
+				}
+			}
+			fmt.Println("🤖 Generated slash commands for Claude Code")
+		}
+
 		successStyle := lipgloss.NewStyle().
 			Bold(true).
 			Foreground(lipgloss.Color("2")). // Green

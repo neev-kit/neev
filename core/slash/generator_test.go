@@ -193,3 +193,96 @@ func TestGenerateGitHubCopilotManifest_CommandMetadata(t *testing.T) {
 		t.Error("Expected at least one alias")
 	}
 }
+
+func TestGenerateClaudeSlashCommandFile(t *testing.T) {
+	cmd := SlashCommand{
+		Name:        "Test",
+		Description: "Test command",
+		Prompt:      "Run test",
+	}
+
+	result := GenerateClaudeSlashCommandFile("test", cmd)
+
+	if !strings.Contains(result, "---") {
+		t.Error("Expected YAML frontmatter")
+	}
+
+	if !strings.Contains(result, "name: Neev: Test") {
+		t.Error("Expected correct name in frontmatter")
+	}
+
+	if !strings.Contains(result, "description: Test command") {
+		t.Error("Expected description in frontmatter")
+	}
+
+	if !strings.Contains(result, "category: Neev") {
+		t.Error("Expected category in frontmatter")
+	}
+
+	if !strings.Contains(result, "<!-- NEEV:START -->") {
+		t.Error("Expected start marker")
+	}
+
+	if !strings.Contains(result, "<!-- NEEV:END -->") {
+		t.Error("Expected end marker")
+	}
+
+	if !strings.Contains(result, "# Neev Test Command") {
+		t.Error("Expected command title")
+	}
+}
+
+func TestGenerateGitHubCopilotPromptFile(t *testing.T) {
+	cmd := SlashCommand{
+		Name:        "Test",
+		Description: "Test command",
+		Prompt:      "Run test",
+	}
+
+	result := GenerateGitHubCopilotPromptFile("test", cmd)
+
+	if !strings.Contains(result, "---") {
+		t.Error("Expected YAML frontmatter")
+	}
+
+	if !strings.Contains(result, "description: Test command") {
+		t.Error("Expected description in frontmatter")
+	}
+
+	if !strings.Contains(result, "<!-- NEEV:START -->") {
+		t.Error("Expected start marker")
+	}
+
+	if !strings.Contains(result, "<!-- NEEV:END -->") {
+		t.Error("Expected end marker")
+	}
+
+	if !strings.Contains(result, "# Neev Test Command") {
+		t.Error("Expected command title")
+	}
+
+	if !strings.Contains(result, "$ARGUMENTS") {
+		t.Error("Expected $ARGUMENTS placeholder")
+	}
+}
+
+func TestGenerateGitHubCopilotPrompts(t *testing.T) {
+	result := GenerateGitHubCopilotPrompts("TestProject")
+
+	if len(result) != 6 {
+		t.Errorf("Expected 6 command files, got %d", len(result))
+	}
+
+	expectedFiles := []string{"bridge.prompt.md", "draft.prompt.md", "inspect.prompt.md", "cucumber.prompt.md", "openapi.prompt.md", "handoff.prompt.md"}
+	for _, file := range expectedFiles {
+		if _, exists := result[file]; !exists {
+			t.Errorf("Expected file %s not found", file)
+		}
+	}
+
+	// Check bridge.prompt.md content
+	bridgeContent := result["bridge.prompt.md"]
+	if !strings.Contains(bridgeContent, "Analyze the project structure") {
+		t.Error("Expected bridge-specific instructions")
+	}
+}

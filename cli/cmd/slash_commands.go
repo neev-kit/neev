@@ -61,6 +61,42 @@ func updateSlashCommands(cwd string) {
 	}
 
 	fmt.Println("✅ Updated AGENTS.md with latest slash commands")
+
+	// Update GitHub Copilot prompt files
+	copilotPrompts := slash.GenerateGitHubCopilotPrompts(projectName)
+	copilotPromptsBasePath := filepath.Join(cwd, ".github", "prompts", "neev")
+	if err := os.MkdirAll(copilotPromptsBasePath, 0755); err != nil {
+		fmt.Printf("❌ Failed to create .github/prompts/neev directory: %v\n", err)
+		os.Exit(1)
+	}
+
+	for fileName, content := range copilotPrompts {
+		filePath := filepath.Join(copilotPromptsBasePath, fileName)
+		if err := os.WriteFile(filePath, []byte(content), 0644); err != nil {
+			fmt.Printf("❌ Failed to update GitHub Copilot prompt file %s: %v\n", fileName, err)
+			os.Exit(1)
+		}
+	}
+
+	fmt.Println("✅ Updated GitHub Copilot prompt files")
+
+	// Update Claude Code slash command files
+	claudeCommands := slash.GenerateClaudeSlashCommands(projectName)
+	claudeBasePath := filepath.Join(cwd, ".claude", "commands", "neev")
+	if err := os.MkdirAll(claudeBasePath, 0755); err != nil {
+		fmt.Printf("❌ Failed to create .claude/commands/neev directory: %v\n", err)
+		os.Exit(1)
+	}
+
+	for fileName, content := range claudeCommands {
+		filePath := filepath.Join(claudeBasePath, fileName)
+		if err := os.WriteFile(filePath, []byte(content), 0644); err != nil {
+			fmt.Printf("❌ Failed to update Claude command file %s: %v\n", fileName, err)
+			os.Exit(1)
+		}
+	}
+
+	fmt.Println("✅ Updated Claude Code slash commands")
 }
 
 func showToolCommands(toolName string) {
@@ -91,6 +127,44 @@ func registerSlashCommands(cwd string) {
 
 	fmt.Println("✅ Registered slash commands with GitHub Copilot")
 	fmt.Printf("📝 Created: %s\n", slashCommandsPath)
+
+	// Generate GitHub Copilot prompt files
+	copilotPrompts := slash.GenerateGitHubCopilotPrompts(projectName)
+	copilotPromptsBasePath := filepath.Join(cwd, ".github", "prompts", "neev")
+	if err := os.MkdirAll(copilotPromptsBasePath, 0755); err != nil {
+		fmt.Printf("❌ Failed to create .github/prompts/neev directory: %v\n", err)
+		os.Exit(1)
+	}
+
+	for fileName, content := range copilotPrompts {
+		filePath := filepath.Join(copilotPromptsBasePath, fileName)
+		if err := os.WriteFile(filePath, []byte(content), 0644); err != nil {
+			fmt.Printf("❌ Failed to write GitHub Copilot prompt file %s: %v\n", fileName, err)
+			os.Exit(1)
+		}
+	}
+
+	fmt.Println("✅ Generated prompt files for GitHub Copilot")
+	fmt.Printf("📝 Created: .github/prompts/neev/*.prompt.md\n")
+
+	// Generate Claude Code slash command files
+	claudeCommands := slash.GenerateClaudeSlashCommands(projectName)
+	claudeBasePath := filepath.Join(cwd, ".claude", "commands", "neev")
+	if err := os.MkdirAll(claudeBasePath, 0755); err != nil {
+		fmt.Printf("❌ Failed to create .claude/commands/neev directory: %v\n", err)
+		os.Exit(1)
+	}
+
+	for fileName, content := range claudeCommands {
+		filePath := filepath.Join(claudeBasePath, fileName)
+		if err := os.WriteFile(filePath, []byte(content), 0644); err != nil {
+			fmt.Printf("❌ Failed to write Claude command file %s: %v\n", fileName, err)
+			os.Exit(1)
+		}
+	}
+
+	fmt.Println("✅ Registered slash commands with Claude Code")
+	fmt.Printf("📝 Created: .claude/commands/neev/*.md\n")
 }
 
 func init() {

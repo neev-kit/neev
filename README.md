@@ -2,7 +2,7 @@
 
 **Stop vibe coding. Build exactly what you spec.**
 
-Neev is a local‑first SDD toolkit that makes your **foundation** (specs + blueprints) the source of truth, then inspects drift and bridges context to Claude/Copilot.
+Neev is a local‑first SDD toolkit that makes your **foundation** (specs + blueprints) the source of truth, then inspects drift and bridges context to Claude Code/Copilot.
 
 [![Go Version](https://img.shields.io/badge/Go-1.25+-00ADD8?style=flat-square&logo=go)](https://golang.org/dl/)
 [![License](https://img.shields.io/badge/License-MIT-blue.svg?style=flat-square)](LICENSE)
@@ -46,7 +46,7 @@ Result: Merged code matches specs on first attempt ✅
 
 ### Workflow: Adding a New Feature
 
-**In Copilot Chat or Claude, use slash commands:**
+**In GitHub Copilot Chat or Claude Code, use slash commands:**
 
 ```
 Step 1: /neev:draft "User Authentication"
@@ -67,7 +67,7 @@ Step 5: /neev:inspect --strict
 
 ### Workflow: Updating an Existing Feature
 
-**In Copilot Chat or Claude, use slash commands:**
+**In GitHub Copilot Chat or Claude Code, use slash commands:**
 
 ```
 Step 1: /neev:draft "Add email verification to User Authentication"
@@ -87,8 +87,6 @@ Step 5: /neev:inspect --strict --drift-check
 ```
 
 ---
-
-## For Senior Engineers & Tech Leads
 
 ### Why Neev? (Business Value)
 

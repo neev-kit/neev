@@ -170,3 +170,151 @@ func GenerateGitHubCopilotManifest(projectName string) (string, error) {
 
 	return string(data), nil
 }
+
+// GenerateClaudeSlashCommandFile creates a Claude Code slash command file
+func GenerateClaudeSlashCommandFile(command string, details SlashCommand) string {
+	var builder strings.Builder
+
+	// Frontmatter
+	builder.WriteString("---\n")
+	builder.WriteString(fmt.Sprintf("name: Neev: %s\n", strings.Title(details.Name)))
+	builder.WriteString(fmt.Sprintf("description: %s\n", details.Description))
+	builder.WriteString("category: Neev\n")
+	builder.WriteString(fmt.Sprintf("tags: [neev, %s]\n", details.Name))
+	builder.WriteString("---\n\n")
+
+	// Markers
+	builder.WriteString("<!-- NEEV:START -->\n\n")
+
+	// Command body
+	builder.WriteString(fmt.Sprintf("# Neev %s Command\n\n", strings.Title(details.Name)))
+	builder.WriteString(fmt.Sprintf("%s\n\n", details.Description))
+	builder.WriteString("## Usage\n\n")
+	builder.WriteString(fmt.Sprintf("Run this command to %s.\n\n", strings.ToLower(details.Description)))
+	builder.WriteString("## Instructions\n\n")
+	builder.WriteString(details.Prompt)
+	builder.WriteString("\n\n")
+
+	// Add specific instructions based on command
+	switch command {
+	case "bridge":
+		builder.WriteString("1. Analyze the project structure\n")
+		builder.WriteString("2. Review all blueprints and foundation files\n")
+		builder.WriteString("3. Generate comprehensive context for AI consumption\n")
+		builder.WriteString("4. Ensure all specifications are included\n")
+	case "draft":
+		builder.WriteString("1. Gather requirements for the new feature\n")
+		builder.WriteString("2. Create a blueprint with intent, architecture, API spec, and security\n")
+		builder.WriteString("3. Validate the blueprint against project principles\n")
+		builder.WriteString("4. Save to .neev/blueprints/\n")
+	case "inspect":
+		builder.WriteString("1. Check for drift between specs and code\n")
+		builder.WriteString("2. Identify missing components or inconsistencies\n")
+		builder.WriteString("3. Report gaps that need to be addressed\n")
+		builder.WriteString("4. Suggest fixes where possible\n")
+	case "cucumber":
+		builder.WriteString("1. Analyze the blueprint for testable scenarios\n")
+		builder.WriteString("2. Generate Gherkin feature files\n")
+		builder.WriteString("3. Create step definitions\n")
+		builder.WriteString("4. Ensure scenarios cover all requirements\n")
+	case "openapi":
+		builder.WriteString("1. Extract API specifications from blueprints\n")
+		builder.WriteString("2. Generate OpenAPI 3.0 compliant specification\n")
+		builder.WriteString("3. Include all endpoints, schemas, and security\n")
+		builder.WriteString("4. Validate the generated spec\n")
+	case "handoff":
+		builder.WriteString("1. Format project context for AI agent consumption\n")
+		builder.WriteString("2. Include relevant blueprints and specifications\n")
+		builder.WriteString("3. Prepare handoff documentation\n")
+		builder.WriteString("4. Ensure context is complete and actionable\n")
+	}
+
+	builder.WriteString("\n\n<!-- NEEV:END -->\n")
+
+	return builder.String()
+}
+
+// GenerateGitHubCopilotPromptFile creates a GitHub Copilot prompt file
+func GenerateGitHubCopilotPromptFile(command string, details SlashCommand) string {
+	var builder strings.Builder
+
+	// Frontmatter
+	builder.WriteString("---\n")
+	builder.WriteString(fmt.Sprintf("description: %s\n", details.Description))
+	builder.WriteString("---\n\n")
+
+	// Markers
+	builder.WriteString("<!-- NEEV:START -->\n\n")
+
+	// Command body
+	builder.WriteString(fmt.Sprintf("# Neev %s Command\n\n", strings.Title(details.Name)))
+	builder.WriteString(fmt.Sprintf("%s\n\n", details.Description))
+	builder.WriteString("## Usage\n\n")
+	builder.WriteString(fmt.Sprintf("Run this command to %s.\n\n", strings.ToLower(details.Description)))
+	builder.WriteString("## Instructions\n\n")
+	builder.WriteString("$ARGUMENTS\n\n") // Placeholder for user input
+	builder.WriteString(details.Prompt)
+	builder.WriteString("\n\n")
+
+	// Add specific instructions based on command
+	switch command {
+	case "bridge":
+		builder.WriteString("1. Analyze the project structure\n")
+		builder.WriteString("2. Review all blueprints and foundation files\n")
+		builder.WriteString("3. Generate comprehensive context for AI consumption\n")
+		builder.WriteString("4. Ensure all specifications are included\n")
+	case "draft":
+		builder.WriteString("1. Gather requirements for the new feature\n")
+		builder.WriteString("2. Create a blueprint with intent, architecture, API spec, and security\n")
+		builder.WriteString("3. Validate the blueprint against project principles\n")
+		builder.WriteString("4. Save to .neev/blueprints/\n")
+	case "inspect":
+		builder.WriteString("1. Check for drift between specs and code\n")
+		builder.WriteString("2. Identify missing components or inconsistencies\n")
+		builder.WriteString("3. Report gaps that need to be addressed\n")
+		builder.WriteString("4. Suggest fixes where possible\n")
+	case "cucumber":
+		builder.WriteString("1. Analyze the blueprint for testable scenarios\n")
+		builder.WriteString("2. Generate Gherkin feature files\n")
+		builder.WriteString("3. Create step definitions\n")
+		builder.WriteString("4. Ensure scenarios cover all requirements\n")
+	case "openapi":
+		builder.WriteString("1. Extract API specifications from blueprints\n")
+		builder.WriteString("2. Generate OpenAPI 3.0 compliant specification\n")
+		builder.WriteString("3. Include all endpoints, schemas, and security\n")
+		builder.WriteString("4. Validate the generated spec\n")
+	case "handoff":
+		builder.WriteString("1. Format project context for AI agent consumption\n")
+		builder.WriteString("2. Include relevant blueprints and specifications\n")
+		builder.WriteString("3. Prepare handoff documentation\n")
+		builder.WriteString("4. Ensure context is complete and actionable\n")
+	}
+
+	builder.WriteString("\n\n<!-- NEEV:END -->\n")
+
+	return builder.String()
+}
+
+// GenerateGitHubCopilotPrompts generates all GitHub Copilot prompt files
+func GenerateGitHubCopilotPrompts(projectName string) map[string]string {
+	files := make(map[string]string)
+
+	for cmd, details := range DefaultSlashCommands {
+		fileName := fmt.Sprintf("%s.prompt.md", cmd)
+		content := GenerateGitHubCopilotPromptFile(cmd, details)
+		files[fileName] = content
+	}
+
+	return files
+}
+func GenerateClaudeSlashCommands(projectName string) map[string]string {
+	files := make(map[string]string)
+
+	for cmd, details := range DefaultSlashCommands {
+		fileName := fmt.Sprintf("%s.md", cmd)
+		content := GenerateClaudeSlashCommandFile(cmd, details)
+		files[fileName] = content
+	}
+
+	return files
+}
