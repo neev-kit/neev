@@ -36,7 +36,7 @@ func syncSkills(cmd *cobra.Command) error {
 
 	// Use current directory as project root
 	projectRoot := cwd
-	
+
 	// Check if .neev directory exists
 	neevDir := filepath.Join(projectRoot, ".neev")
 	if _, err := os.Stat(neevDir); os.IsNotExist(err) {

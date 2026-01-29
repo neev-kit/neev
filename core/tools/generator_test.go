@@ -106,4 +106,3 @@ func TestGenerateSummaryReport(t *testing.T) {
 		t.Logf("Report generated: %d characters", len(report))
 	}
 }
-

@@ -66,11 +66,11 @@ func (a *CursorAdapter) GenerateSkill(skill SkillContent) (string, error) {
 
 func (a *CursorAdapter) GenerateConfigFile(projectName string, skills []SkillContent) (string, error) {
 	config := map[string]interface{}{
-		"version":     "1.0",
-		"project":     projectName,
-		"skills":      len(skills),
-		"generated":   true,
-		"format":      "cursor",
+		"version":   "1.0",
+		"project":   projectName,
+		"skills":    len(skills),
+		"generated": true,
+		"format":    "cursor",
 	}
 
 	data, err := json.MarshalIndent(config, "", "  ")
@@ -280,12 +280,12 @@ func (a *FallbackAdapter) GenerateConfigFile(projectName string, skills []SkillC
 
 func (a *FallbackAdapter) GetMetadata() map[string]interface{} {
 	return map[string]interface{}{
-		"adapter":         a.Name(),
-		"native":          false,
-		"skillsDir":       a.tool.Config.SkillsDir,
-		"configDir":       a.tool.Config.ConfigDir,
-		"formatType":      "markdown",
-		"requiresManual":  true,
+		"adapter":        a.Name(),
+		"native":         false,
+		"skillsDir":      a.tool.Config.SkillsDir,
+		"configDir":      a.tool.Config.ConfigDir,
+		"formatType":     "markdown",
+		"requiresManual": true,
 	}
 }
 
