@@ -4,10 +4,10 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
-	"time"
+	"strings"
 )
 
-// SkillsGenerator generates skills for detected tools
+// SkillsGenerator orchestrates skill generation for all detected tools
 type SkillsGenerator struct {
 	projectName string
 	projectRoot string
@@ -16,224 +16,190 @@ type SkillsGenerator struct {
 }
 
 // NewSkillsGenerator creates a new skills generator
-func NewSkillsGenerator(projectName, projectRoot string, tools []Tool) *SkillsGenerator {
-	adapters := GetAdapters(tools)
+func NewSkillsGenerator(projectName string, projectRoot string) *SkillsGenerator {
 	return &SkillsGenerator{
 		projectName: projectName,
 		projectRoot: projectRoot,
-		tools:       tools,
-		adapters:    adapters,
 	}
 }
 
 // GenerateSkills generates skills for all detected tools
 func (sg *SkillsGenerator) GenerateSkills(blueprints []SkillContent) error {
-	if len(sg.tools) == 0 {
-		fmt.Println("No tools detected. Generating natural language fallback documentation...")
-		return sg.generateFallbackDocumentation(blueprints)
+	// Detect installed tools
+	sg.tools = DetectInstalledTools()
+	sg.adapters = GetAdapters(sg.tools)
+
+	// If no tools detected, generate fallback
+	if !HasAnyTool(sg.tools) {
+		if err := sg.generateFallbackDocumentation(blueprints); err != nil {
+			return fmt.Errorf("failed to generate fallback documentation: %w", err)
+		}
+		return nil
 	}
 
-	fmt.Printf("Generating skills for %d tool(s)...\n", len(sg.tools))
-
-	for i, tool := range sg.tools {
-		if !tool.Installed {
-			continue
+	// Generate skills for each tool
+	for _, adapter := range sg.adapters {
+		if err := sg.generateForTool(adapter, blueprints); err != nil {
+			return fmt.Errorf("failed to generate for %s: %w", adapter.Name(), err)
 		}
+	}
 
-		adapter := sg.adapters[i]
-		fmt.Printf("\n📦 Generating skills for %s\n", tool.Name)
-
-		// Create skills directory
-		skillsDir := tool.Config.SkillsDir
-		if err := os.MkdirAll(skillsDir, 0755); err != nil {
-			return fmt.Errorf("failed to create skills directory for %s: %w", tool.Name, err)
-		}
-
-		// Generate each skill
-		for _, skill := range blueprints {
-			if err := WriteSkillToFile(adapter, skill, skillsDir); err != nil {
-				fmt.Printf("  ⚠️  Failed to generate skill %s: %v\n", skill.Name, err)
-				continue
-			}
-			fmt.Printf("  ✓ Generated %s\n", skill.Name)
-		}
-
-		// Generate config file
-		configContent, err := adapter.GenerateConfigFile(sg.projectName, blueprints)
-		if err != nil {
-			return fmt.Errorf("failed to generate config for %s: %w", tool.Name, err)
-		}
-
-		configPath := filepath.Join(skillsDir, "README.md")
-		if err := os.WriteFile(configPath, []byte(configContent), 0644); err != nil {
-			return fmt.Errorf("failed to write config for %s: %w", tool.Name, err)
-		}
-		fmt.Printf("  ✓ Generated configuration\n")
-
-		// Create index file
-		if err := sg.generateIndexFile(adapter, skillsDir, blueprints); err != nil {
-			fmt.Printf("  ⚠️  Failed to generate index: %v\n", err)
-		}
+	// Generate index file
+	if err := sg.generateIndexFile(blueprints); err != nil {
+		return fmt.Errorf("failed to generate index: %w", err)
 	}
 
 	return nil
 }
 
-// generateFallbackDocumentation generates documentation for tools without adapters
-func (sg *SkillsGenerator) generateFallbackDocumentation(blueprints []SkillContent) error {
-	// Create a generic skills directory in .neev
-	skillsDir := filepath.Join(sg.projectRoot, ".neev", "skills")
+// generateForTool generates skills for a specific tool
+func (sg *SkillsGenerator) generateForTool(adapter Adapter, blueprints []SkillContent) error {
+	tool := FindTool(sg.getToolTypeFromAdapter(adapter), sg.tools)
+	if tool == nil || !tool.Installed {
+		return nil
+	}
+
+	skillsDir := tool.Config.SkillsDir
+
+	// Create skills directory
 	if err := os.MkdirAll(skillsDir, 0755); err != nil {
 		return fmt.Errorf("failed to create skills directory: %w", err)
 	}
 
-	fallbackAdapter := NewFallbackAdapter(&Tool{
-		Type:      "fallback",
-		Name:      "Unsupported Tools",
-		Installed: true,
-		Config: ToolConfig{
-			SkillsDir:   skillsDir,
-			ConfigDir:   filepath.Join(sg.projectRoot, ".neev"),
-			Native:      false,
-			CommandName: "",
-		},
-	})
-
-	fmt.Println("\n📄 Generating natural language skills documentation...")
-
-	// Generate each skill in markdown
-	for _, skill := range blueprints {
-		if err := WriteSkillToFile(fallbackAdapter, skill, skillsDir); err != nil {
-			fmt.Printf("  ⚠️  Failed to generate skill %s: %v\n", skill.Name, err)
-			continue
+	// Write each skill
+	for _, blueprint := range blueprints {
+		if err := WriteSkillToFile(adapter, blueprint, skillsDir); err != nil {
+			return err
 		}
-		fmt.Printf("  ✓ Generated %s.md\n", skill.Name)
 	}
 
-	// Generate README
-	configContent, err := fallbackAdapter.GenerateConfigFile(sg.projectName, blueprints)
+	// Generate config file
+	configContent, err := adapter.GenerateConfigFile(sg.projectName, blueprints)
 	if err != nil {
-		return fmt.Errorf("failed to generate fallback config: %w", err)
+		return err
 	}
 
 	configPath := filepath.Join(skillsDir, "README.md")
 	if err := os.WriteFile(configPath, []byte(configContent), 0644); err != nil {
-		return fmt.Errorf("failed to write fallback config: %w", err)
+		return err
 	}
-
-	fmt.Printf("  ✓ Generated documentation at %s\n", skillsDir)
-	fmt.Println("\n💡 Tip: Use 'neev sync-skills' to regenerate skills when blueprints change")
 
 	return nil
 }
 
-// generateIndexFile creates an index of all skills
-func (sg *SkillsGenerator) generateIndexFile(adapter Adapter, skillsDir string, blueprints []SkillContent) error {
-	indexContent := fmt.Sprintf(`# Skills Index for %s
+// generateFallbackDocumentation generates fallback documentation
+func (sg *SkillsGenerator) generateFallbackDocumentation(blueprints []SkillContent) error {
+	skillsDir := filepath.Join(sg.projectRoot, ".neev", "skills")
 
-Generated: %s
-Tool: %s
-Format: %s
-
-## Overview
-
-This directory contains AI skills generated from your Neev blueprints.
-
-## Skills
-
-`, sg.projectName, time.Now().Format("2006-01-02 15:04:05"), adapter.Name(), adapter.GetMetadata()["formatType"])
-
-	for i, skill := range blueprints {
-		indexContent += fmt.Sprintf("%d. **%s** - %s\n", i+1, skill.Name, skill.Description)
+	// Create directory
+	if err := os.MkdirAll(skillsDir, 0755); err != nil {
+		return fmt.Errorf("failed to create skills directory: %w", err)
 	}
 
-	indexContent += fmt.Sprintf(`
+	// Create fallback tool for documentation
+	fallbackTool := Tool{
+		Name: "Generic Tool",
+		Config: ToolConfig{
+			SkillsDir: skillsDir,
+			ConfigDir: filepath.Join(sg.projectRoot, ".neev"),
+		},
+	}
 
-## Usage
+	adapter := NewFallbackAdapter(&fallbackTool)
 
-1. Each skill is in its respective file
-2. Use %s's native skill/prompt loading mechanism
-3. Customize as needed for your project
-
-## Updates
-
-Skills are auto-generated from blueprints. To update:
-
-\`\`\`bash
-cd %s
-neev sync-skills
-\`\`\`
-
----
-*Generated by Neev - Spec-Driven Development CLI*
-`, adapter.Name(), sg.projectRoot)
-
-	indexPath := filepath.Join(skillsDir, "INDEX.md")
-	return os.WriteFile(indexPath, []byte(indexContent), 0644)
-}
-
-// GenerateSummaryReport generates a summary report of all generated skills
-func (sg *SkillsGenerator) GenerateSummaryReport(blueprints []SkillContent) string {
-	report := fmt.Sprintf(`
-═══════════════════════════════════════════════════════════════
-                    SKILLS GENERATION SUMMARY
-═══════════════════════════════════════════════════════════════
-
-Project: %s
-Location: %s
-Generated: %s
-
-TOOLS DETECTED & CONFIGURED
-───────────────────────────────────────────────────────────────
-`, sg.projectName, sg.projectRoot, time.Now().Format("2006-01-02 15:04:05"))
-
-	if len(sg.tools) == 0 {
-		report += `
-⚠️  No AI tools detected. Generating fallback documentation.
-    Skills are available in .neev/skills/ in markdown format.
-`
-	} else {
-		for _, tool := range sg.tools {
-			if tool.Installed {
-				metadata := GetAdapter(&tool).GetMetadata()
-				formatType := metadata["formatType"]
-				report += fmt.Sprintf(`
-✓ %s
-  Format:     %s
-  Location:   %s
-  Type:       Native
-`, tool.Name, formatType, tool.Config.SkillsDir)
-			}
+	// Write each skill
+	for _, blueprint := range blueprints {
+		if err := WriteSkillToFile(adapter, blueprint, skillsDir); err != nil {
+			return err
 		}
 	}
 
-	report += fmt.Sprintf(`
-
-GENERATED SKILLS
-───────────────────────────────────────────────────────────────
-Total Skills: %d
-
-`, len(blueprints))
-
-	for i, skill := range blueprints {
-		report += fmt.Sprintf("%2d. %s (%s)\n", i+1, skill.Name, skill.Type)
+	// Generate config file
+	configContent, err := adapter.GenerateConfigFile(sg.projectName, blueprints)
+	if err != nil {
+		return err
 	}
 
-	report += `
-NEXT STEPS
-───────────────────────────────────────────────────────────────
-1. Open your AI tool and load the skills from the directories above
-2. Test each skill in your project
-3. Run 'neev sync-skills' to regenerate when blueprints change
+	configPath := filepath.Join(skillsDir, "README.md")
+	if err := os.WriteFile(configPath, []byte(configContent), 0644); err != nil {
+		return err
+	}
 
-DOCUMENTATION
-───────────────────────────────────────────────────────────────
-- README.md files are in each tool's skills directory
-- INDEX.md provides a complete overview
-- Natural language fallbacks available if tool isn't supported
+	return nil
+}
 
-═══════════════════════════════════════════════════════════════
-`
+// generateIndexFile generates an index file for all skills
+func (sg *SkillsGenerator) generateIndexFile(blueprints []SkillContent) error {
+	indexContent := fmt.Sprintf("# Skills Index for %s\n\n", sg.projectName)
+	indexContent += "## Generated Skills\n\n"
+
+	for i, skill := range blueprints {
+		indexContent += fmt.Sprintf("%d. **%s** (%s)\n   - Description: %s\n   - Version: %s\n\n",
+			i+1, skill.Name, skill.Type, skill.Description, skill.Version)
+	}
+
+	indexContent += "## Tools\n\n"
+	for _, tool := range sg.tools {
+		if tool.Installed {
+			indexContent += fmt.Sprintf("- %s: %s/skills/\n", tool.Name, tool.Config.SkillsDir)
+		}
+	}
+
+	neevDir := filepath.Join(sg.projectRoot, ".neev")
+	indexPath := filepath.Join(neevDir, "SKILLS_INDEX.md")
+
+	if err := os.WriteFile(indexPath, []byte(indexContent), 0644); err != nil {
+		return fmt.Errorf("failed to write index file: %w", err)
+	}
+
+	return nil
+}
+
+// GenerateSummaryReport generates a summary report of generated skills
+func (sg *SkillsGenerator) GenerateSummaryReport(blueprints []SkillContent) string {
+	report := fmt.Sprintf("Skills Generation Report for %s\n", sg.projectName)
+	report += strings.Repeat("=", len(report)) + "\n\n"
+
+	report += fmt.Sprintf("Detected Tools: %d\n", len(sg.tools))
+	for _, tool := range sg.tools {
+		status := "Not Installed"
+		if tool.Installed {
+			status = "Installed"
+		}
+		report += fmt.Sprintf("  - %s: %s\n", tool.Name, status)
+	}
+
+	report += fmt.Sprintf("\nBlueprints Converted: %d\n", len(blueprints))
+	for _, bp := range blueprints {
+		report += fmt.Sprintf("  - %s\n", bp.Name)
+	}
+
+	report += fmt.Sprintf("\nAdapters Used: %d\n", len(sg.adapters))
+	for _, adapter := range sg.adapters {
+		metadata := adapter.GetMetadata()
+		reportFormat, _ := metadata["formatType"].(string)
+		report += fmt.Sprintf("  - %s (%s)\n", adapter.Name(), reportFormat)
+	}
 
 	return report
+}
+
+// getToolTypeFromAdapter gets the tool type from an adapter
+func (sg *SkillsGenerator) getToolTypeFromAdapter(adapter Adapter) ToolType {
+	switch adapter.Name() {
+	case "Cursor":
+		return ToolCursor
+	case "Claude":
+		return ToolClaude
+	case "GitHub Copilot":
+		return ToolCopilot
+	case "Codeium":
+		return ToolCodeium
+	case "Supabase":
+		return ToolSupabase
+	case "Perplexity":
+		return ToolPerplexity
+	default:
+		return ToolUnknown
+	}
 }

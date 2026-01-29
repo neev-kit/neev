@@ -5,7 +5,6 @@ import (
 	"os"
 	"path/filepath"
 
-	"github.com/neev-kit/neev/core/foundation"
 	"github.com/neev-kit/neev/core/tools"
 	"github.com/spf13/cobra"
 )
@@ -18,84 +17,68 @@ var syncSkillsCmd = &cobra.Command{
 This command:
 1. Detects installed AI tools (Claude, Cursor, Copilot, etc.)
 2. Regenerates skills from your blueprints
-3. Updates native skill directories (.claude/skills/, .cursor/skills/, etc.)
+3. Updates native skill directories
 4. Generates natural language fallback for unsupported tools
 
-Skills are generated in tool-native formats:
-- Cursor: JSON format
-- Claude: Markdown format
-- GitHub Copilot: Markdown format
-- Codeium: JSON format
-- Others: Natural language markdown
-
 Example:
-  neev sync-skills                    # Regenerate all skills
-  neev sync-skills --verbose          # Show detailed output`,
+  neev sync-skills`,
 
 	RunE: func(cmd *cobra.Command, args []string) error {
 		return syncSkills(cmd)
 	},
 }
 
-// syncSkills synchronizes skills across all detected tools
 func syncSkills(cmd *cobra.Command) error {
 	cwd, err := os.Getwd()
 	if err != nil {
 		return fmt.Errorf("failed to get current directory: %w", err)
 	}
 
-	// Find project root
-	projectRoot, err := foundation.FindProjectRoot(cwd)
-	if err != nil {
-		return fmt.Errorf("not in a Neev project. Run 'neev init' first: %w", err)
+	// Use current directory as project root
+	projectRoot := cwd
+	
+	// Check if .neev directory exists
+	neevDir := filepath.Join(projectRoot, ".neev")
+	if _, err := os.Stat(neevDir); os.IsNotExist(err) {
+		return fmt.Errorf("not in a Neev project. Run 'neev init' first")
 	}
 
 	projectName := filepath.Base(projectRoot)
 
-	// Detect tools
-	detectedTools := tools.DetectInstalledTools()
-
-	fmt.Println("\n🔍 Tool Detection")
-	fmt.Println("─────────────────────────────────────────────────────────────")
-	tools.PrintDetectionSummary(detectedTools)
-
 	// Load blueprints as skills
 	blueprints, err := loadBlueprintsAsSkills(projectRoot)
 	if err != nil {
-		fmt.Printf("⚠️  Warning: Could not load all blueprints: %v\n", err)
-		blueprints = []tools.SkillContent{} // Continue with empty blueprints
+		fmt.Printf("Warning: %v\n", err)
 	}
 
 	if len(blueprints) == 0 {
-		fmt.Println("\n⚠️  No blueprints found. Skills will be empty.")
-		fmt.Println("    Create blueprints in .neev/blueprints/ first.")
+		fmt.Println("No blueprints found in .neev/blueprints/")
+		return nil
 	}
 
 	// Generate skills
-	generator := tools.NewSkillsGenerator(projectName, projectRoot, detectedTools)
+	generator := tools.NewSkillsGenerator(projectName, projectRoot)
 	if err := generator.GenerateSkills(blueprints); err != nil {
 		return fmt.Errorf("failed to generate skills: %w", err)
 	}
 
-	// Print summary
+	fmt.Println("\n✅ Skills generated successfully!")
 	fmt.Println(generator.GenerateSummaryReport(blueprints))
 
 	return nil
 }
 
-// loadBlueprintsAsSkills loads blueprint files and converts them to skills
 func loadBlueprintsAsSkills(projectRoot string) ([]tools.SkillContent, error) {
 	blueprintsDir := filepath.Join(projectRoot, ".neev", "blueprints")
 
-	// Check if blueprints directory exists
 	if _, err := os.Stat(blueprintsDir); os.IsNotExist(err) {
-		return nil, nil // No blueprints, return empty slice
+		return nil, nil
 	}
 
 	var skills []tools.SkillContent
 	entries, err := os.ReadDir(blueprintsDir)
 	if err != nil {
-		return nil, fmt.Errorf("failed to read blueprints directory: %w", err)
+		return nil, fmt.Errorf("failed to read blueprints: %w", err)
 	}
 
 	for _, entry := range entries {
@@ -106,7 +89,7 @@ func loadBlueprintsAsSkills(projectRoot string) ([]tools.SkillContent, error) {
 		filePath := filepath.Join(blueprintsDir, entry.Name())
 		content, err := os.ReadFile(filePath)
 		if err != nil {
-			fmt.Printf("⚠️  Could not read %s: %v\n", entry.Name(), err)
+			fmt.Printf("Warning: could not read %s\n", entry.Name())
 			continue
 		}
 
@@ -125,48 +108,28 @@ func loadBlueprintsAsSkills(projectRoot string) ([]tools.SkillContent, error) {
 	return skills, nil
 }
 
-// isMarkdownFile checks if a file is a markdown file
 func isMarkdownFile(filename string) bool {
 	return len(filename) > 3 && filename[len(filename)-3:] == ".md"
 }
 
-// filenameToTitle converts a filename to a title
 func filenameToTitle(filename string) string {
-	// Remove .md extension
 	title := filename[:len(filename)-3]
-	// Replace hyphens and underscores with spaces
-	for i, c := range title {
-		if c == '-' || c == '_' {
-			title = title[:i] + " " + title[i+1:]
-		}
-	}
 	return title
 }
 
-// extractDescription extracts the first line or heading from markdown content
 func extractDescription(content string) string {
-	lines := make([]rune, 0)
-	inHeading := false
+	lines := []rune(content)
+	description := ""
 
-	for i, r := range content {
+	for i, r := range lines {
 		if r == '\n' {
-			if inHeading || i > 0 {
-				break
-			}
-			continue
+			break
 		}
-		if i < len(content)-1 && content[i:i+1] == "#" {
-			inHeading = true
-		}
-		if inHeading && r != '#' && r != ' ' {
-			inHeading = false
-			lines = append(lines, r)
-		} else if !inHeading && r != '#' {
-			lines = append(lines, r)
+		if r != '#' && (i == 0 || lines[i-1] != '#') {
+			description += string(r)
 		}
 	}
 
-	description := string(lines)
 	if len(description) > 80 {
 		description = description[:80] + "..."
 	}
@@ -174,30 +137,16 @@ func extractDescription(content string) string {
 	return description
 }
 
-// detectToolsCmd shows all detected AI tools
 var detectToolsCmd = &cobra.Command{
 	Use:   "detect-tools",
-	Short: "Detect installed AI tools on this system",
-	Long: `Detect and list all installed AI tools that Neev can integrate with.
-
-Supported tools:
-- Claude (VS Code extension or standalone app)
-- Cursor IDE
-- GitHub Copilot (VS Code)
-- Codeium
-- Supabase
-- Perplexity AI
-
-Example:
-  neev detect-tools                    # List all detected tools
-  neev detect-tools --verbose          # Show detailed information`,
+	Short: "Detect installed AI tools",
+	Long:  `Detect and list all installed AI tools on this system.`,
 
 	RunE: func(cmd *cobra.Command, args []string) error {
 		return detectTools(cmd)
 	},
 }
 
-// detectTools detects and displays available tools
 func detectTools(cmd *cobra.Command) error {
 	fmt.Println("\n🔍 Detecting AI Tools")
 	fmt.Println("═════════════════════════════════════════════════════════════")
@@ -205,123 +154,57 @@ func detectTools(cmd *cobra.Command) error {
 	detectedTools := tools.DetectInstalledTools()
 
 	if len(detectedTools) == 0 {
-		fmt.Println("\n⚠️  No AI tools detected on this system.\n")
-		fmt.Println("Supported tools:")
-		fmt.Println("  - Claude (VS Code extension or standalone app)")
-		fmt.Println("  - Cursor IDE")
-		fmt.Println("  - GitHub Copilot (VS Code)")
-		fmt.Println("  - Codeium")
-		fmt.Println("  - Supabase")
-		fmt.Println("  - Perplexity AI")
-		fmt.Println("\nInstall one of these tools to enable skill generation.")
+		fmt.Println("\nNo AI tools detected on this system.")
 		return nil
 	}
 
 	fmt.Println("\nDetected Tools:")
-	fmt.Println("───────────────────────────────────────────────────────────────")
-
 	for _, tool := range detectedTools {
 		if tool.Installed {
 			fmt.Printf("\n✓ %s\n", tool.Name)
-			fmt.Printf("  Config Dir:  %s\n", tool.Config.ConfigDir)
-			fmt.Printf("  Skills Dir:  %s\n", tool.Config.SkillsDir)
-			fmt.Printf("  Native:      %v\n", tool.Config.Native)
-			if tool.Path != "" {
-				fmt.Printf("  Location:    %s\n", tool.Path)
-			}
+			fmt.Printf("  Config: %s\n", tool.Config.ConfigDir)
+			fmt.Printf("  Skills: %s\n", tool.Config.SkillsDir)
 		}
 	}
 
-	fmt.Println("\n═════════════════════════════════════════════════════════════")
-	fmt.Printf("\nFound %d AI tool(s). Ready for skill generation!\n", len(detectedTools))
-	fmt.Println("Run 'neev sync-skills' to generate skills for these tools.\n")
+	fmt.Printf("\nFound %d tool(s).\n\n", len(detectedTools))
 
 	return nil
 }
 
-// skillsStatusCmd shows the status of generated skills
 var skillsStatusCmd = &cobra.Command{
 	Use:   "skills-status",
 	Short: "Show status of generated skills",
-	Long: `Display the status of skills generated for each detected AI tool.
-
-Shows:
-- Which tools have detected skills
-- Location of skill directories
-- Number of available skills
-- Last generation time
-
-Example:
-  neev skills-status                   # Show skills status`,
+	Long:  `Display the status of skills for each detected tool.`,
 
 	RunE: func(cmd *cobra.Command, args []string) error {
 		return skillsStatus(cmd)
 	},
 }
 
-// skillsStatus shows the status of generated skills
 func skillsStatus(cmd *cobra.Command) error {
-	cwd, err := os.Getwd()
-	if err != nil {
-		return fmt.Errorf("failed to get current directory: %w", err)
-	}
-
-	// Find project root
-	projectRoot, err := foundation.FindProjectRoot(cwd)
-	if err != nil {
-		return fmt.Errorf("not in a Neev project: %w", err)
-	}
-
-	fmt.Println("\n📊 Skills Status Report")
+	fmt.Println("\n📊 Skills Status")
 	fmt.Println("═════════════════════════════════════════════════════════════")
 
 	detectedTools := tools.DetectInstalledTools()
 
 	if len(detectedTools) == 0 {
-		fmt.Println("\nNo tools detected. Checking for fallback skills...")
-
-		fallbackDir := filepath.Join(projectRoot, ".neev", "skills")
-		if _, err := os.Stat(fallbackDir); os.IsNotExist(err) {
-			fmt.Println("✗ No skills generated.")
-			fmt.Println("\nRun 'neev sync-skills' to generate skills.")
-			return nil
-		}
-
-		countSkills := countSkillFiles(fallbackDir)
-		fmt.Printf("\n✓ Fallback skills: %d files in %s\n", countSkills, fallbackDir)
+		fmt.Println("\nNo tools detected.\n")
 		return nil
 	}
 
-	allHaveSkills := true
 	for _, tool := range detectedTools {
 		if tool.Installed {
-			skillCount := countSkillFiles(tool.Config.SkillsDir)
-			if skillCount > 0 {
-				fmt.Printf("\n✓ %s\n", tool.Name)
-				fmt.Printf("  Skills Dir: %s\n", tool.Config.SkillsDir)
-				fmt.Printf("  Skill Count: %d\n", skillCount)
-			} else {
-				fmt.Printf("\n✗ %s\n", tool.Name)
-				fmt.Printf("  Skills Dir: %s\n", tool.Config.SkillsDir)
-				fmt.Printf("  Skill Count: 0 (not generated)\n")
-				allHaveSkills = false
-			}
+			count := countSkillFiles(tool.Config.SkillsDir)
+			fmt.Printf("\n✓ %s: %d skills\n", tool.Name, count)
+			fmt.Printf("  Directory: %s\n", tool.Config.SkillsDir)
 		}
 	}
 
-	fmt.Println("\n═════════════════════════════════════════════════════════════")
-
-	if allHaveSkills {
-		fmt.Println("\n✓ All tools have generated skills.")
-	} else {
-		fmt.Println("\n⚠️  Some tools are missing skills.")
-		fmt.Println("Run 'neev sync-skills' to generate skills for all tools.\n")
-	}
-
+	fmt.Println()
 	return nil
 }
 
-// countSkillFiles counts the number of skill files in a directory
 func countSkillFiles(dir string) int {
 	entries, err := os.ReadDir(dir)
 	if err != nil {
@@ -330,15 +213,16 @@ func countSkillFiles(dir string) int {
 
 	count := 0
 	for _, entry := range entries {
-		if !entry.IsDir() && (isMarkdownFile(entry.Name()) || isJSONFile(entry.Name())) {
-			count++
+		if !entry.IsDir() {
+			if isMarkdownFile(entry.Name()) || isJSONFile(entry.Name()) {
+				count++
+			}
 		}
 	}
 
 	return count
 }
 
-// isJSONFile checks if a file is a JSON file
 func isJSONFile(filename string) bool {
 	return len(filename) > 5 && filename[len(filename)-5:] == ".json"
 }
