@@ -189,7 +189,7 @@ func skillsStatus(cmd *cobra.Command) error {
 	detectedTools := tools.DetectInstalledTools()
 
 	if len(detectedTools) == 0 {
-		fmt.Println("\nNo tools detected.\n")
+		fmt.Println("\nNo tools detected.")
 		return nil
 	}
 
