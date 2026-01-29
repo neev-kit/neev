@@ -8,6 +8,7 @@ import (
 	"github.com/charmbracelet/lipgloss"
 	"github.com/neev-kit/neev/core/foundation"
 	"github.com/neev-kit/neev/core/slash"
+	"github.com/neev-kit/neev/core/tools"
 	"github.com/spf13/cobra"
 )
 
@@ -47,49 +48,29 @@ var initCmd = &cobra.Command{
 			fmt.Println("📋 Created AGENTS.md with slash command definitions")
 		}
 
-		// Generate GitHub Copilot slash-commands.json
-		slashCommandsJSON, err := slash.GenerateGitHubCopilotManifest(projectName)
-		if err != nil {
-			fmt.Printf("Warning: Failed to generate slash-commands manifest: %v\n", err)
-		} else {
-			slashCommandsPath := filepath.Join(cwd, ".github", "slash-commands.json")
-			if err := os.MkdirAll(filepath.Dir(slashCommandsPath), 0755); err != nil {
-				fmt.Printf("Warning: Failed to create .github directory: %v\n", err)
-			} else if err := os.WriteFile(slashCommandsPath, []byte(slashCommandsJSON), 0644); err != nil {
-				fmt.Printf("Warning: Failed to write slash-commands.json: %v\n", err)
-			} else {
-				fmt.Println("🔗 Registered slash commands with GitHub Copilot")
-			}
-		}
-
-		// Generate GitHub Copilot prompt files
-		copilotPrompts := slash.GenerateGitHubCopilotPrompts(projectName)
+		// Verify Copilot prompt files were created
 		copilotPromptsBasePath := filepath.Join(cwd, ".github", "prompts", "neev")
-		if err := os.MkdirAll(copilotPromptsBasePath, 0755); err != nil {
-			fmt.Printf("Warning: Failed to create .github/prompts/neev directory: %v\n", err)
-		} else {
-			for fileName, content := range copilotPrompts {
-				filePath := filepath.Join(copilotPromptsBasePath, fileName)
-				if err := os.WriteFile(filePath, []byte(content), 0644); err != nil {
-					fmt.Printf("Warning: Failed to write GitHub Copilot prompt file %s: %v\n", fileName, err)
-				}
-			}
+		if _, err := os.Stat(copilotPromptsBasePath); err == nil {
 			fmt.Println("📝 Generated prompt files for GitHub Copilot")
 		}
 
-		// Generate Claude Code slash command files
-		claudeCommands := slash.GenerateClaudeSlashCommands(projectName)
+		// Verify Claude commands were created
 		claudeBasePath := filepath.Join(cwd, ".claude", "commands", "neev")
-		if err := os.MkdirAll(claudeBasePath, 0755); err != nil {
-			fmt.Printf("Warning: Failed to create .claude/commands/neev directory: %v\n", err)
-		} else {
-			for fileName, content := range claudeCommands {
-				filePath := filepath.Join(claudeBasePath, fileName)
-				if err := os.WriteFile(filePath, []byte(content), 0644); err != nil {
-					fmt.Printf("Warning: Failed to write Claude command file %s: %v\n", fileName, err)
-				}
-			}
+		if _, err := os.Stat(claudeBasePath); err == nil {
 			fmt.Println("🤖 Generated slash commands for Claude Code")
+		}
+
+		// Detect and initialize skills for installed tools
+		fmt.Println("\n🔍 Detecting installed AI tools...")
+		detectedTools := tools.DetectInstalledTools()
+
+		if len(detectedTools) > 0 {
+			fmt.Printf("✓ Found %d AI tool(s)\n", len(detectedTools))
+			fmt.Println("\n💡 Tip: Run 'neev sync-skills' to generate skills for your tools.")
+		} else {
+			fmt.Println("ℹ️  No AI tools detected yet.")
+			fmt.Println("    When you install Claude, Cursor, or Copilot,")
+			fmt.Println("    run 'neev sync-skills' to generate skills.")
 		}
 
 		successStyle := lipgloss.NewStyle().
